@@ -1,0 +1,95 @@
+/* Login Page Styles - Benedicto College Library Management System */
+
+/* Responsive design with 800px breakpoint */
+
+/* Default: Mobile view (below 800px) - Form only, centered */
+main {
+  flex-direction: column;
+}
+
+main > div:first-child {
+  display: none !important;
+}
+
+main > div:last-child {
+  width: 100% !important;
+}
+
+/* Desktop view (800px and above) - Logo + Form side by side */
+@media (min-width: 800px) {
+  main {
+    flex-direction: row !important;
+  }
+
+  main > div:first-child {
+    display: flex !important;
+    width: 40% !important;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  main > div:last-child {
+    width: 60% !important;
+  }
+}
+
+/* 800px dimension adjustments - larger header and better form fit */
+@media (max-width: 800px) {
+  /* Make header larger */
+  header {
+    padding: 1.5rem 1rem !important;
+    min-height: 80px !important;
+  }
+
+  /* Make login form fit better in main content */
+  main > div:last-child {
+    padding: 2rem 1rem !important;
+    min-height: calc(100vh - 160px) !important;
+  }
+
+  /* Make form container larger */
+  main > div:last-child .bg-white {
+    max-width: 400px !important;
+    padding: 2rem !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Phone responsive adjustments */
+@media (max-width: 480px) {
+  main > div:last-child {
+    padding: 1rem !important;
+  }
+
+  main > div:last-child .bg-white {
+    max-width: 350px !important;
+    padding: 1.5rem !important;
+  }
+}
+
+/* Clean image styling - no containers, no borders */
+.login-logo-container {
+  /* No border radius, no shadows, just clean image */
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+
+/* Fallback styling for image loading issues */
+.login-logo-container[src=""],
+.login-logo-container:not([src]) {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  min-height: 300px;
+}
+
+.login-logo-container[src=""]:before,
+.login-logo-container:not([src]):before {
+  content: "Benedicto College Logo";
+}

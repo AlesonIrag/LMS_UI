@@ -1,0 +1,280 @@
+<div class="min-h-screen bg-white">
+
+  <!-- Header consistent sa design -->
+  <header class="bg-gray-950 shadow-xl border-b-4 border-orange-500 relative z-10">
+    <div class="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+      <div class="flex-1 flex justify-start items-center">
+        <a routerLink="/" class="hover:opacity-80 transition duration-300 flex items-center">
+          <img
+            src="assets/images/BcLogo.png"
+            alt="Benedicto College Logo"
+            class="h-10 sm:h-14 md:h-16 lg:h-20 w-auto max-w-full object-contain"
+          >
+        </a>
+      </div>
+      <nav class="flex-shrink-0">
+        <button
+          routerLink="/login"
+          class="bg-black hover:bg-gray-800 text-white font-semibold py-2 px-4 sm:px-6 rounded-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center space-x-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          <span>Back to Login</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main content section para sa terms of service -->
+  <main class="py-12 px-6 sm:px-8 lg:px-12">
+      <!-- Terms of Service Content -->
+        
+        <!-- Header section with legal icon ug title -->
+        <div class="text-center mb-12">
+          <div class="w-24 h-24 terms-icon rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h1 class="text-4xl sm:text-5xl font-bold section-header mb-4">Terms of Service</h1>
+          <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            By accessing and using the Benedicto College Library Management System, you agree to comply with these terms and conditions.
+          </p>
+          <div class="terms-divider w-32 mx-auto mt-6"></div>
+        </div>
+
+        <!-- Effective Date -->
+        <div class="success-box rounded-xl p-6 mb-8">
+          <div class="flex items-center">
+            <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="font-semibold text-gray-800">Effective Date: January 1, 2025</span>
+          </div>
+        </div>
+
+        <!-- Terms Content -->
+        <div class="space-y-10">
+          
+          <!-- Acceptance of Terms -->
+          <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+              <span class="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center mr-4 text-lg font-bold">1</span>
+              Acceptance of Terms
+            </h2>
+            <div class="subsection rounded-xl p-6 space-y-4">
+              <p class="text-gray-700 leading-relaxed">
+                By creating an account and accessing the Benedicto College Library Management System, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy.
+              </p>
+              <p class="text-gray-700 leading-relaxed">
+                These terms constitute a legally binding agreement between you and Benedicto College. If you do not agree to these terms, you must not use our library services.
+              </p>
+            </div>
+          </section>
+
+          <!-- User Eligibility -->
+          <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+              <span class="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center mr-4 text-lg font-bold">2</span>
+              User Eligibility
+            </h2>
+            <div class="subsection rounded-xl p-6 space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800">Authorized Users:</h3>
+              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                <li>Currently enrolled students of Benedicto College</li>
+                <li>Faculty and staff members with valid institutional credentials</li>
+                <li>Authorized researchers and visiting scholars</li>
+                <li>Alumni with active library privileges</li>
+              </ul>
+              
+              <div class="warning-box rounded-lg p-4 mt-6">
+                <div class="flex items-start">
+                  <svg class="w-6 h-6 text-red-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                  <p class="text-red-800 font-medium">
+                    Unauthorized access or sharing of credentials is strictly prohibited and may result in account suspension and disciplinary action.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Acceptable Use Policy -->
+          <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+              <span class="w-10 h-10 bg-purple-500 text-white rounded-xl flex items-center justify-center mr-4 text-lg font-bold">3</span>
+              Acceptable Use Policy
+            </h2>
+            <div class="subsection rounded-xl p-6 space-y-6">
+              <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Permitted Activities:</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                  <li>Academic research and educational purposes</li>
+                  <li>Borrowing and returning library materials</li>
+                  <li>Accessing digital resources and databases</li>
+                  <li>Using study spaces and computer facilities</li>
+                  <li>Participating in library programs and events</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Prohibited Activities:</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                  <li>Commercial use of library resources</li>
+                  <li>Sharing login credentials with unauthorized persons</li>
+                  <li>Downloading or distributing copyrighted materials illegally</li>
+                  <li>Attempting to bypass security measures</li>
+                  <li>Using the system for illegal or unethical purposes</li>
+                  <li>Disrupting library operations or other users</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Account Responsibilities -->
+          <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+              <span class="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center mr-4 text-lg font-bold">4</span>
+              Account Responsibilities
+            </h2>
+            <div class="subsection rounded-xl p-6 space-y-4">
+              <p class="text-gray-700 leading-relaxed">
+                You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
+              </p>
+              <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">Your Responsibilities Include:</h3>
+              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                <li>Keeping your password secure and not sharing it with others</li>
+                <li>Notifying the library immediately of any unauthorized use</li>
+                <li>Ensuring your contact information is current and accurate</li>
+                <li>Returning borrowed materials on time</li>
+                <li>Paying any applicable fines or fees promptly</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Intellectual Property -->
+          <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+              <span class="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center mr-4 text-lg font-bold">5</span>
+              Intellectual Property Rights
+            </h2>
+            <div class="subsection rounded-xl p-6 space-y-4">
+              <p class="text-gray-700 leading-relaxed">
+                All content, materials, and resources provided through the library system are protected by copyright and other intellectual property laws.
+              </p>
+              <p class="text-gray-700 leading-relaxed">
+                Users must respect copyright restrictions and licensing agreements. Fair use provisions apply to academic and research activities as defined by applicable copyright law.
+              </p>
+            </div>
+          </section>
+
+          <!-- Limitation of Liability -->
+          <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+              <span class="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center mr-4 text-lg font-bold">6</span>
+              Limitation of Liability
+            </h2>
+            <div class="subsection rounded-xl p-6 space-y-4">
+              <p class="text-gray-700 leading-relaxed">
+                Benedicto College provides library services "as is" and makes no warranties regarding system availability, accuracy of information, or fitness for particular purposes.
+              </p>
+              <p class="text-gray-700 leading-relaxed">
+                The college shall not be liable for any indirect, incidental, or consequential damages arising from the use of library services.
+              </p>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Contact Information -->
+        <div class="mt-12 p-8 bg-gradient-to-r from-purple-50 to-orange-50 rounded-2xl border border-gray-200">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Questions or Concerns?</h3>
+          <p class="text-gray-700 mb-6">
+            If you have questions about these Terms of Service or need clarification on any policies, please contact our library administration:
+          </p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                <span class="text-gray-700"><strong>Email:</strong> legal&#64;benedictocollege.edu.ph</span>
+              </div>
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+                <span class="text-gray-700"><strong>Phone:</strong> (032) 123-4567</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="text-gray-700"><strong>Office:</strong> Library Administration Building</span>
+              </div>
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-gray-700"><strong>Hours:</strong> Monday-Friday, 8:00 AM - 5:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-black py-8 border-t-8 border-orange-500 border-b-8 border-b-orange-500">
+    <div class="px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="text-gray-200 mb-4 md:mb-0">
+          &copy; 2025 Library Management System. All Rights Reserved.
+        </div>
+        <div class="flex space-x-6">
+          <a routerLink="/privacy-policy" class="text-gray-400 hover:text-orange-400 transition duration-300">Privacy Policy</a>
+          <a routerLink="/terms-of-service" class="text-gray-400 hover:text-orange-400 transition duration-300">Terms of Service</a>
+          <a routerLink="/support" class="text-gray-400 hover:text-orange-400 transition duration-300">Support</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll to Top Button -->
+  <button
+    id="scrollToTopBtn"
+    onclick="scrollToTop()"
+    class="fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 z-50 opacity-0 invisible"
+    title="Scroll to top"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+    </svg>
+  </button>
+</div>
+
+<script>
+  // Scroll to Top functionality
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  // Show/hide scroll to top button based on scroll position
+  window.addEventListener('scroll', function() {
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    if (window.pageYOffset > 300) {
+      scrollToTopBtn.classList.remove('opacity-0', 'invisible');
+      scrollToTopBtn.classList.add('opacity-100', 'visible');
+    } else {
+      scrollToTopBtn.classList.remove('opacity-100', 'visible');
+      scrollToTopBtn.classList.add('opacity-0', 'invisible');
+    }
+  });
+</script>

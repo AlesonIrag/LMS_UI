@@ -1,0 +1,46 @@
+
+
+.privacy-container{
+background: linear-gradient(135deg, #f8fafc 0%, #f8fafc 100%);
+
+
+
+}
+
+
+.privacy-card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+
+.section-divider{
+  background: linear-gradient(90deg, #f97316 0%, #3b82f6 100%);
+  height: 3px;
+  border-radius: 2px;
+}
+
+
+.highlight-box{
+
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border-left: 4px solid #f97316;
+}
+
+
+.info-icon{ 
+
+  background: linear-gradient(135deg, #3b82f7 0%, #1d4ed8 100% )
+}
+
+
+
+
+@media (max-width: 768px){
+
+  .privacy-card{
+
+      margin: 1rem;
+      padding: 1.5rem;
+  }
+}

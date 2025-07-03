@@ -1,0 +1,54 @@
+/* Terms of Service Styles - Benedicto College Library Management System */
+
+.terms-container {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 20%, #f3e8ff 80%, #e0e7ff 100%);
+}
+
+.terms-card {
+  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.section-header {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.terms-divider {
+  background: linear-gradient(90deg, #f97316 0%, #3b82f6 50%, #8b5cf6 100%);
+  height: 4px;
+  border-radius: 2px;
+}
+
+.warning-box {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-left: 5px solid #ef4444;
+}
+
+.success-box {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left: 5px solid #22c55e;
+}
+
+.terms-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.subsection {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-left: 3px solid #3b82f6;
+}
+
+@media (max-width: 768px) {
+  .terms-card {
+    margin: 0.5rem;
+    padding: 1.5rem;
+  }
+  
+  .section-header {
+    font-size: 1.5rem;
+  }
+}

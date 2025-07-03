@@ -1,0 +1,99 @@
+/* Background slideshow styles */
+.background-slideshow {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+.slide.active {
+  opacity: 1;
+}
+
+/* Ensure proper z-index layering */
+.relative {
+  position: relative;
+}
+
+/* Additional styling for better text visibility */
+.drop-shadow-lg {
+  filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
+}
+
+.drop-shadow-md {
+  filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+}
+
+/* Tethering/Alive animation for LOGIN button */
+.login-tether {
+  animation: tether 2s ease-in-out infinite;
+  transform-origin: center;
+  border-width: 2px;
+  border-style: solid;
+  border-color: white;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+@keyframes tether {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    border-color: white;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+  25% {
+    transform: scale(1.05) rotate(-1deg);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 8px -1px rgb(0 0 0 / 0.15), 0 4px 6px -2px rgb(0 0 0 / 0.15);
+  }
+  50% {
+    transform: scale(1.02) rotate(1deg);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 5px 7px -1px rgb(0 0 0 / 0.12), 0 3px 5px -2px rgb(0 0 0 / 0.12);
+  }
+  75% {
+    transform: scale(1.08) rotate(-0.5deg);
+    border-color: white;
+    box-shadow: 0 8px 10px -1px rgb(0 0 0 / 0.2), 0 6px 8px -2px rgb(0 0 0 / 0.2);
+  }
+}
+
+/* Hover effect enhancement */
+.login-tether:hover {
+  animation: tether-fast 0.8s ease-in-out infinite;
+  border-color: rgba(255, 255, 255, 1) !important;
+}
+
+@keyframes tether-fast {
+  0%, 100% {
+    transform: scale(1.1) rotate(0deg);
+    border-color: white;
+    box-shadow: 0 8px 12px -1px rgb(0 0 0 / 0.25), 0 6px 10px -2px rgb(0 0 0 / 0.25);
+  }
+  25% {
+    transform: scale(1.15) rotate(-2deg);
+    border-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 15px -1px rgb(0 0 0 / 0.3), 0 8px 12px -2px rgb(0 0 0 / 0.3);
+  }
+  50% {
+    transform: scale(1.12) rotate(2deg);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 9px 13px -1px rgb(0 0 0 / 0.27), 0 7px 11px -2px rgb(0 0 0 / 0.27);
+  }
+  75% {
+    transform: scale(1.18) rotate(-1deg);
+    border-color: white;
+    box-shadow: 0 12px 18px -1px rgb(0 0 0 / 0.35), 0 10px 15px -2px rgb(0 0 0 / 0.35);
+  }
+}

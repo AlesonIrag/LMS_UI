@@ -8,6 +8,6 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected title = 'Library-Management-System-AI';
+export class AppComponent {
+  title = 'Library-Management-System-AI';
 }

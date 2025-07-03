@@ -1,0 +1,81 @@
+<div class="min-h-screen bg-white text-gray-800 flex">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-blue-200 shadow-md flex-shrink-0 border-r-4 border-orange-500">
+    <div class="p-6 text-center">
+      <h1 class="text-2xl font-bold text-gray-800">
+        <a routerLink="/">LibraryPro</a>
+      </h1>
+    </div>
+    <nav class="mt-10">
+      <a routerLink="/dashboard" class="flex items-center py-2 px-6 bg-blue-300 text-gray-800">
+        <span class="ml-3">Dashboard</span>
+      </a>
+      <a routerLink="/dashboard/books" class="flex items-center py-2 px-6 hover:bg-blue-300">
+        <span class="ml-3">Books</span>
+      </a>
+      <a routerLink="/dashboard/members" class="flex items-center py-2 px-6 hover:bg-blue-300">
+        <span class="ml-3">Members</span>
+      </a>
+      <a routerLink="/dashboard/settings" class="flex items-center py-2 px-6 hover:bg-blue-300">
+        <span class="ml-3">Settings</span>
+      </a>
+      <a routerLink="/" class="flex items-center py-2 px-6 hover:bg-blue-300">
+        <span class="ml-3">Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-grow flex flex-col">
+    <!-- Header -->
+    <header class="bg-blue-200 shadow-md p-4 flex justify-between items-center border-b-4 border-orange-500">
+      <div>
+        <h2 class="text-xl font-semibold">Dashboard Overview</h2>
+      </div>
+      <div class="flex items-center">
+        <span class="mr-4">Welcome, Admin</span>
+        <button class="text-gray-800 focus:outline-none">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="flex-grow p-6 bg-gray-100">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Card 1: Total Books -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-bold mb-2">Total Books</h3>
+          <p class="text-3xl font-semibold">1,250</p>
+        </div>
+        <!-- Card 2: Members -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-bold mb-2">Total Members</h3>
+          <p class="text-3xl font-semibold">350</p>
+        </div>
+        <!-- Card 3: Books Issued -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-bold mb-2">Books Issued</h3>
+          <p class="text-3xl font-semibold">75</p>
+        </div>
+        <!-- Card 4: Overdue Books -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-bold mb-2">Overdue Books</h3>
+          <p class="text-3xl font-semibold">12</p>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="mt-8 bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-bold mb-4">Recent Activity</h3>
+        <ul>
+          <li class="border-b border-gray-200 py-2">New member registered: John Doe</li>
+          <li class="border-b border-gray-200 py-2">Book issued: "The Great Gatsby" to Jane Smith</li>
+          <li class="py-2">Book returned: "1984" by Michael Brown</li>
+        </ul>
+      </div>
+    </main>
+  </div>
+</div>
