@@ -1,0 +1,35 @@
+/* Faculty Login Page Styles - Benedicto College Library Management System */
+
+/* Responsive design with 800px breakpoint */
+
+/* Default: Mobile view (below 800px) - Form only, centered */
+main {
+  flex-direction: column;
+}
+
+main > div:first-child {
+  display: none !important;
+}
+
+main > div:last-child {
+  width: 100% !important;
+}
+
+/* Desktop view (800px and above) - Logo + Form side by side */
+@media (min-width: 800px) {
+  main {
+    flex-direction: row !important;
+  }
+
+  main > div:first-child {
+    display: flex !important;
+    width: 40% !important;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  main > div:last-child {
+    width: 60% !important;
+  }
+}

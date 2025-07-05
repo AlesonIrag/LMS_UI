@@ -1,164 +1,171 @@
-<div class="min-h-screen bg-white">
+<div class="min-h-screen bg-white flex flex-col">
 
-  <!-- Header consistent sa design sa login ug landing page -->
-  <header class="bg-gray-950 shadow-xl border-b-4 border-orange-500 relative z-10">
-    <div class="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+  <!-- header with back button -->
+  <header class="bg-gray-950 shadow-xl border-b-4 border-orange-500 relative z-10 flex-shrink-0">
+    <div class="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
       <div class="flex-1 flex justify-start items-center">
         <a routerLink="/" class="hover:opacity-80 transition duration-300 flex items-center">
           <img
             src="assets/images/BcLogo.png"
             alt="Benedicto College Logo"
             class="h-10 sm:h-14 md:h-16 lg:h-20 w-auto max-w-full object-contain"
+            onerror="console.error('Logo failed to load:', this.src); this.style.border='2px solid red';"
+            onload="console.log('Logo loaded successfully:', this.src);"
           >
         </a>
       </div>
       <nav class="flex-shrink-0">
         <button
-          routerLink="/login"
+          routerLink="/"
           class="bg-black hover:bg-gray-800 text-white font-semibold py-2 px-4 sm:px-6 rounded-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center space-x-2"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
           </svg>
-          <span>Back to Login</span>
+          <span>Back to Home</span>
         </button>
       </nav>
     </div>
   </header>
 
-  <!-- Main content section para sa privacy policy -->
-  <main class="py-12 px-6 sm:px-8 lg:px-12">
-      <!-- Privacy Policy Content -->
-        
-        <!-- Header section with icon ug title -->
-        <div class="text-center mb-12">
-          <div class="w-20 h-20 info-icon rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-            </svg>
+  <!-- main content -->
+  <main class="flex-1 flex">
+
+    <!-- logo image -->
+    <div class="flex items-center justify-center p-8">
+      <img
+        src="assets/images/login-logo.png"
+        alt="Benedicto College Faculty Login"
+        class="max-w-full h-auto object-fit-contain"
+        style="max-height: 500px;"
+        onerror="this.src='assets/images/login-logo.jpg'; console.log('Switched to JPG format');"
+        onload="console.log('Faculty login logo loaded successfully');"
+      >
+    </div>
+
+    <!-- login form container -->
+    <div class="flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <!-- login card -->
+      <div class="bg-white rounded-2xl shadow-xl border-2 border-gray-300 p-5 sm:p-6 w-full max-w-md lg:max-w-lg mx-auto relative overflow-hidden">
+            <!-- decorative circles lang -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100 to-green-200 rounded-full opacity-50 -translate-y-16 translate-x-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full opacity-50 translate-y-12 -translate-x-12"></div>
+
+            <!-- faculty icon ug welcome text -->
+            <div class="text-center mb-4 sm:mb-5 relative z-10">
+             <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-xl">
+  <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+  </svg>
+</div>
+
+              <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Faculty Portal</h2>
+              <p class="text-sm text-gray-600">Faculty access to library resources</p>
+            </div>
+
+       
+            <form class="space-y-3 relative z-10" id="facultyLoginForm" (submit)="onSubmit($event)">
+       
+              <div>
+                <label for="facultyId" class="block text-sm font-semibold text-gray-700 mb-2">
+                  Faculty ID <span class="text-red-500">*</span>
+                </label>
+ <input
+  type="text"
+  id="facultyId"
+  name="facultyId"
+  placeholder="FAC001BC"
+  maxlength="12"
+  (input)="onFacultyIdInput($event)"
+  (blur)="onFacultyIdBlur($event)"
+  (keydown)="onFacultyIdKeydown($event)"
+  class="w-full px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition duration-300 bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+/>
+
+
+            <div id="facultyIdError" class="text-red-600 text-xs sm:text-sm mt-2 font-medium hidden bg-red-50 border border-red-200 rounded-lg p-2">
+               Faculty ID is required!
+            </div>
           </div>
-          <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
-          <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-            Protecting your personal information and academic data is our top priority at Benedicto College Library Management System.
+
+       
+          <div>
+            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+              Password <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••••"
+              class="w-full px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition duration-300 bg-white text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+              (input)="onPasswordInput($event)"
+              (blur)="onPasswordBlur($event)"
+            >
+            <div id="passwordError" class="text-red-600 text-xs sm:text-sm mt-2 font-medium hidden bg-red-50 border border-red-200 rounded-lg p-2">
+               Password is required!
+            </div>
+          </div>
+
+          <!-- remember me ug forgot password -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                class="w-4 h-4 text-green-500 border-2 border-gray-300 rounded focus:ring-green-200 focus:ring-2 bg-white"
+              >
+              <span class="ml-3 text-sm font-medium text-gray-700">Remember me</span>
+            </label>
+            <a href="#" class="text-sm font-semibold text-green-600 hover:text-green-700 transition duration-300">
+              Forgot your password?
+            </a>
+          </div>
+
+          <!-- login button -->
+          <button
+            type="submit"
+            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-green-200 text-sm sm:text-base"
+          >
+            Access Faculty Portal
+          </button>
+        </form>
+
+        <!-- terms and privacy policy -->
+        <div class="mt-3 text-center relative z-10">
+          <p class="text-xs text-gray-500 leading-relaxed">
+            By signing in, you agree to our 
+            <a routerLink="/terms-of-service" class="text-green-600 hover:text-green-700 underline font-medium transition duration-300">Terms of Service</a>
+            and 
+            <a routerLink="/privacy-policy" class="text-green-600 hover:text-green-700 underline font-medium transition duration-300">Privacy Policy</a>
           </p>
-          <div class="section-divider w-24 mx-auto mt-6"></div>
         </div>
 
-        <!-- Last Updated info -->
-        <div class="highlight-box rounded-xl p-6 mb-8">
-          <div class="flex items-center">
-            <svg class="w-6 h-6 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span class="font-semibold text-gray-800">Last Updated: January 2025</span>
-          </div>
+            <!-- help links -->
+            <div class="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-200 text-center relative z-10">
+              <div class="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm">
+                <a routerLink="/support" class="text-gray-600 hover:text-green-600 font-medium transition duration-300">
+                  Need Help?
+                </a>
+                <span class="text-gray-400 hidden sm:inline">|</span>
+                <a routerLink="/support" class="text-gray-600 hover:text-green-600 font-medium transition duration-300">
+                  Faculty Support
+                </a>
+              </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Privacy Policy Content -->
-        <div class="space-y-8">
-          
-          <!-- Information We Collect Section -->
-          <section>
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-              <span class="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">1</span>
-              Information We Collect
-            </h2>
-            <div class="bg-gray-50 rounded-xl p-6 space-y-4">
-              <h3 class="text-lg font-semibold text-gray-800">Student Information:</h3>
-              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Student ID number and academic credentials</li>
-                <li>Full name, email address, and contact information</li>
-                <li>Academic program and year level</li>
-                <li>Library usage history and borrowing records</li>
-                <li>Digital resource access logs and preferences</li>
-              </ul>
-              
-              <h3 class="text-lg font-semibold text-gray-800 mt-6">Technical Information:</h3>
-              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Device information and browser type</li>
-                <li>IP address and location data (for security purposes)</li>
-                <li>System usage analytics and performance data</li>
-                <li>Login timestamps and session information</li>
-              </ul>
-            </div>
-          </section>
-
-          <!-- How We Use Information Section -->
-          <section>
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-              <span class="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">2</span>
-              How We Use the Information We Collect
-            </h2>
-            <div class="bg-gray-50 rounded-xl p-6 space-y-4">
-              <h3 class="text-lg font-semibold text-gray-800">Academic Services:</h3>
-              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Provide access to library resources and digital materials</li>
-                <li>Manage book reservations, renewals, and return notifications</li>
-                <li>Track academic research progress and resource utilization</li>
-                <li>Generate usage reports for academic planning</li>
-              </ul>
-              
-              <h3 class="text-lg font-semibold text-gray-800 mt-6">System Operations:</h3>
-              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Maintain system security and prevent unauthorized access</li>
-                <li>Improve user experience and system performance</li>
-                <li>Send important notifications about library services</li>
-                <li>Comply with educational institution requirements</li>
-              </ul>
-            </div>
-          </section>
-
-          <!-- Privacy Obligations Section -->
-          <section>
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-              <span class="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">3</span>
-              Your Privacy Obligations
-            </h2>
-            <div class="bg-gray-50 rounded-xl p-6 space-y-4">
-              <h3 class="text-lg font-semibold text-gray-800">Student Responsibilities:</h3>
-              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Keep your login credentials secure and confidential</li>
-                <li>Report any unauthorized access to your account immediately</li>
-                <li>Use library resources only for legitimate academic purposes</li>
-                <li>Respect intellectual property rights and copyright laws</li>
-                <li>Update your contact information when necessary</li>
-              </ul>
-              
-              <h3 class="text-lg font-semibold text-gray-800 mt-6">Data Protection:</h3>
-              <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                <li>Do not share your account with other students</li>
-                <li>Log out properly when using shared computers</li>
-                <li>Report any privacy concerns to the library administration</li>
-                <li>Follow Benedicto College's acceptable use policies</li>
-              </ul>
-            </div>
-          </section>
-
-        </div>
-
-        <!-- Contact Information -->
-        <div class="mt-12 p-6 bg-white rounded-xl border border-gray-200">
-          <h3 class="text-xl font-bold text-gray-900 mb-4">Questions About This Privacy Policy?</h3>
-          <p class="text-gray-700 mb-4">
-            If you have any questions or concerns about how we handle your personal information, please contact us:
-          </p>
-          <div class="space-y-2 text-gray-700">
-            <p><strong>Email:</strong> library&#64;benedictocollege.edu.ph</p>
-            <p><strong>Phone:</strong> (032) 123-4567</p>
-            <p><strong>Office:</strong> Benedicto College Library Administration</p>
-          </div>
-        </div>
   </main>
 
   <!-- Footer -->
   <footer class="bg-black py-12 border-t-8 border-orange-500">
-    <div class="px-6">
+    <div class="container mx-auto px-6">
       <!-- Mobile/Tablet: Grid Layout (below 1000px) -->
       <div class="block xl:hidden">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <!-- Get in Touch Section -->
           <div class="text-center md:text-left">
-            <h3 class="text-xl font-bold text-white mb-4">Contact Us</h3>
+            <h3 class="text-xl font-bold text-white mb-4">Get in Touch</h3>
             <div class="space-y-3 text-gray-300">
               <div class="flex items-center justify-center md:justify-start">
                 <svg class="w-5 h-5 text-orange-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +187,7 @@
           <div class="text-center md:text-left">
             <h3 class="text-xl font-bold text-white mb-4">Quick Links</h3>
             <div class="space-y-2">
-              <a routerLink="/privacy-policy" class="block text-orange-400 font-medium">Privacy Policy</a>
+              <a routerLink="/privacy-policy" class="block text-gray-400 hover:text-orange-400 transition duration-300">Privacy Policy</a>
               <a routerLink="/terms-of-service" class="block text-gray-400 hover:text-orange-400 transition duration-300">Terms of Service</a>
               <a routerLink="/support" class="block text-gray-400 hover:text-orange-400 transition duration-300">Support</a>
               <a routerLink="/" class="block text-gray-400 hover:text-orange-400 transition duration-300">Back to Home</a>
@@ -238,7 +245,7 @@
           <div class="flex-1">
             <h3 class="text-xl font-bold text-white mb-4">Quick Links</h3>
             <div class="space-y-2">
-              <a routerLink="/privacy-policy" class="block text-orange-400 font-medium">Privacy Policy</a>
+              <a routerLink="/privacy-policy" class="block text-gray-400 hover:text-orange-400 transition duration-300">Privacy Policy</a>
               <a routerLink="/terms-of-service" class="block text-gray-400 hover:text-orange-400 transition duration-300">Terms of Service</a>
               <a routerLink="/support" class="block text-gray-400 hover:text-orange-400 transition duration-300">Support</a>
               <a routerLink="/" class="block text-gray-400 hover:text-orange-400 transition duration-300">Back to Home</a>
@@ -272,50 +279,14 @@
       <!-- Copyright Section -->
       <div class="border-t border-gray-700 pt-6">
         <div class="flex flex-col xl:flex-row justify-between items-center">
-          <div class="text-gray-400 mb-4 xl:mb-0 text-center xl:text-left">
+          <div class="text-gray-400 mb-4 xl:mb-0 text-center xl:text-left text-sm">
             &copy; 2025 Benedicto College Library Management System. All Rights Reserved.
           </div>
-          <div class="text-gray-400 text-sm text-center xl:text-right">
+          <div class="text-gray-400 text-xs text-center xl:text-right">
             Your Education… Our Mission
           </div>
         </div>
       </div>
     </div>
   </footer>
-
-  <!-- Scroll to Top Button -->
-  <button
-    id="scrollToTopBtn"
-    onclick="scrollToTop()"
-    class="fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 z-50 opacity-0 invisible"
-    title="Scroll to top"
-  >
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-    </svg>
-  </button>
 </div>
-
-<script>
-  // Scroll to Top functionality
-  function scrollToTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  }
-
-  // Show/hide scroll to top button based on scroll position
-  window.addEventListener('scroll', function() {
-    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-    if (window.pageYOffset > 300) {
-      scrollToTopBtn.classList.remove('opacity-0', 'invisible');
-      scrollToTopBtn.classList.add('opacity-100', 'visible');
-    } else {
-      scrollToTopBtn.classList.remove('opacity-100', 'visible');
-      scrollToTopBtn.classList.add('opacity-0', 'invisible');
-    }
-  });
-</script>
-
-
