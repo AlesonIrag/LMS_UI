@@ -7,6 +7,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { PrivacyPolicyComponent } from './privacy-policy/privacy-policy.component';
 import { TermsOfServiceComponent } from './terms-of-service/terms-of-service.component';
 import { SupportComponent } from './support/support.component';
+import { ContactComponent } from './contact/contact.component';
+import { AboutComponent } from './about/about.component';
 
 import { TestComponent } from './test/test.component';
 
@@ -19,5 +21,7 @@ export const routes: Routes = [
     { path: 'privacy-policy', component: PrivacyPolicyComponent },
     { path: 'terms-of-service', component: TermsOfServiceComponent },
     { path: 'support', component: SupportComponent },
+    { path: 'contact', component: ContactComponent },
+  { path: 'about', component: AboutComponent },
     { path: 'test', component: TestComponent },
 ];

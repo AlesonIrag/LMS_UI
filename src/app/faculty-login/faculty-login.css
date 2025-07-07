@@ -33,3 +33,37 @@ main > div:last-child {
     width: 60% !important;
   }
 }
+
+/* 800px dimension adjustments - larger header and better form fit */
+@media (max-width: 800px) {
+  /* Make header larger */
+  header {
+    padding: 1.5rem 1rem !important;
+    min-height: 80px !important;
+  }
+
+  /* Make login form fit better in main content */
+  main > div:last-child {
+    padding: 1.75rem 1rem !important;
+    min-height: calc(100vh - 150px) !important;
+  }
+
+  /* Make form container smaller */
+  main > div:last-child .bg-white {
+    max-width: 360px !important;
+    padding: 1.5rem !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Phone responsive adjustments */
+@media (max-width: 480px) {
+  main > div:last-child {
+    padding: 1rem !important;
+  }
+
+  main > div:last-child .bg-white {
+    max-width: 330px !important;
+    padding: 1.25rem !important;
+  }
+}

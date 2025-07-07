@@ -10,7 +10,7 @@ import { RouterModule } from '@angular/router';
 })
 export class FacultyLoginComponent {
 
-  // Prevent all non-alphanumeric input for faculty ID
+  // Prevent all non-alphanumeric input for faculty ID (NO DASHES ALLOWED)
   onFacultyIdKeydown(event: KeyboardEvent): void {
     const allowedKeys = [
       'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
@@ -23,17 +23,25 @@ export class FacultyLoginComponent {
       return;
     }
 
-    // Allow alphanumeric characters
+    // ONLY allow alphanumeric characters - NO DASHES for faculty
     if (!/^[a-zA-Z0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+
+    // Explicitly prevent dash character for faculty ID
+    if (event.key === '-') {
       event.preventDefault();
     }
   }
 
-  // Handle faculty ID input formatting - alphanumeric only, no dashes
+  // Handle faculty ID input formatting - alphanumeric only, NO DASHES
   onFacultyIdInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    // Remove any non-alphanumeric characters (no dashes allowed for faculty)
+    // Remove any non-alphanumeric characters - EXPLICITLY remove dashes and any formatting
     let value = input.value.replace(/[^a-zA-Z0-9]/g, '');
+
+    // Remove any potential student format patterns (like 2000-00000)
+    value = value.replace(/-/g, '');
 
     // Limit to 12 characters for faculty ID
     if (value.length > 12) {

@@ -44,14 +44,14 @@ main > div:last-child {
 
   /* Make login form fit better in main content */
   main > div:last-child {
-    padding: 2rem 1rem !important;
-    min-height: calc(100vh - 160px) !important;
+    padding: 1.75rem 1rem !important;
+    min-height: calc(100vh - 150px) !important;
   }
 
-  /* Make form container larger */
+  /* Make form container smaller */
   main > div:last-child .bg-white {
-    max-width: 400px !important;
-    padding: 2rem !important;
+    max-width: 360px !important;
+    padding: 1.5rem !important;
     margin: 0 auto !important;
   }
 }
@@ -63,8 +63,8 @@ main > div:last-child {
   }
 
   main > div:last-child .bg-white {
-    max-width: 350px !important;
-    padding: 1.5rem !important;
+    max-width: 330px !important;
+    padding: 1.25rem !important;
   }
 }
 

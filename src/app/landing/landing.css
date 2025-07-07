@@ -97,3 +97,107 @@
     box-shadow: 0 12px 18px -1px rgb(0 0 0 / 0.35), 0 10px 15px -2px rgb(0 0 0 / 0.35);
   }
 }
+
+/* Mobile Navigation Pane Styles */
+#mobile-nav-pane {
+  backdrop-filter: blur(20px);
+  border-left: 4px solid #f97316;
+}
+
+#mobile-nav-pane.open {
+  transform: translateX(0);
+}
+
+#mobile-nav-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Navigation link hover effects */
+.nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(214, 126, 126, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.nav-link:hover::before {
+  left: 100%;
+}
+
+/* Mobile menu button animation */
+#mobile-menu-button {
+  transition: transform 0.3s ease;
+}
+
+#mobile-menu-button.active {
+  transform: rotate(90deg);
+}
+
+/* Responsive improvements */
+@media (max-width: 600px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Ensure text doesn't overflow on small screens */
+  h1, h2, h3 {
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* Improve button spacing on mobile */
+  .login-tether {
+    min-width: 120px;
+    text-align: center;
+  }
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Mobile navigation pane width adjustment for smaller screens */
+@media (max-width: 480px) {
+  #mobile-nav-pane {
+    width: 100vw;
+    max-width: 320px;
+  }
+}
+
+/* Enhanced mobile menu button states */
+#hamburger-icon.hidden {
+  opacity: 0;
+  transform: rotate(180deg);
+}
+
+#close-icon.show {
+  opacity: 1;
+  transform: rotate(0deg);
+}
+
+#close-icon {
+  opacity: 0;
+  transform: rotate(-180deg);
+  transition: all 0.3s ease;
+}
+
+#hamburger-icon {
+  transition: all 0.3s ease;
+}
