@@ -173,11 +173,54 @@
 
 
 
+      <!-- Search Section -->
+      <div class="mb-12">
+        <div class="bg-gray-50 py-8 px-6 rounded-lg border-l-4 border-blue-500">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Search Help & Support</h2>
+
+          <!-- Search Bar -->
+          <div class="max-w-2xl mx-auto mb-6">
+            <div class="relative">
+              <input
+                type="text"
+                id="supportSearch"
+                placeholder="Search for help topics, guides, or enter your question..."
+                class="w-full px-4 py-3 pl-12 pr-4 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                autocomplete="off"
+              >
+              <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+
+              <!-- Search Suggestions Dropdown -->
+              <div id="searchSuggestions" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden z-50 max-h-60 overflow-y-auto">
+                <!-- Suggestions will be populated here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Popular Searches -->
+          <div class="text-center">
+            <p class="text-gray-600 mb-3">Popular searches:</p>
+            <div class="flex flex-wrap justify-center gap-2">
+              <span onclick="searchAndScroll('password reset')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Password Reset</span>
+              <span onclick="searchAndScroll('student id format')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Student ID Format</span>
+              <span onclick="searchAndScroll('book renewal')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Book Renewal</span>
+              <span onclick="searchAndScroll('study room')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Study Room</span>
+              <span onclick="searchAndScroll('library hours')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Library Hours</span>
+              <span onclick="searchAndScroll('overdue fines')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Overdue Fines</span>
+              <span onclick="searchAndScroll('login problems')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Login Problems</span>
+              <span onclick="searchAndScroll('book search')" class="cursor-pointer bg-white px-3 py-1 rounded-full text-sm text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition duration-300 border border-gray-200">Book Search</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Help Categories -->
       <div class="space-y-8 mb-12">
 
         <!-- Account & Login Help -->
-        <div class="border-l-4 border-orange-500 pl-6 py-4">
+        <div id="account-login" class="border-l-4 border-orange-500 pl-6 py-4 transition-all duration-500">
           <h3 class="text-xl font-semibold text-gray-900 mb-3">Account & Login</h3>
           <p class="text-gray-600 mb-4">Issues with student ID, password reset, account access, and login problems.</p>
           <ul class="text-gray-700 space-y-2">
@@ -189,7 +232,7 @@
         </div>
 
         <!-- Library Resources -->
-        <div class="border-l-4 border-orange-500 pl-6 py-4">
+        <div id="library-resources" class="border-l-4 border-orange-500 pl-6 py-4 transition-all duration-500">
           <h3 class="text-xl font-semibold text-gray-900 mb-3">Library Resources</h3>
           <p class="text-gray-600 mb-4">Help with finding books, digital resources, and research materials.</p>
           <ul class="text-gray-700 space-y-2">
@@ -201,7 +244,7 @@
         </div>
 
         <!-- Technical Support -->
-        <div class="border-l-4 border-orange-500 pl-6 py-4">
+        <div id="technical-support" class="border-l-4 border-orange-500 pl-6 py-4 transition-all duration-500">
           <h3 class="text-xl font-semibold text-gray-900 mb-3">Technical Support</h3>
           <p class="text-gray-600 mb-4">System issues, browser problems, and technical troubleshooting.</p>
           <ul class="text-gray-700 space-y-2">
@@ -213,7 +256,7 @@
         </div>
 
         <!-- Borrowing & Returns -->
-        <div class="border-l-4 border-orange-500 pl-6 py-4">
+        <div id="borrowing-returns" class="border-l-4 border-orange-500 pl-6 py-4 transition-all duration-500">
           <h3 class="text-xl font-semibold text-gray-900 mb-3">Borrowing & Returns</h3>
           <p class="text-gray-600 mb-4">Questions about borrowing policies, due dates, and renewals.</p>
           <ul class="text-gray-700 space-y-2">
@@ -225,7 +268,7 @@
         </div>
 
         <!-- Study Spaces -->
-        <div class="border-l-4 border-orange-500 pl-6 py-4">
+        <div id="study-spaces" class="border-l-4 border-orange-500 pl-6 py-4 transition-all duration-500">
           <h3 class="text-xl font-semibold text-gray-900 mb-3">Study Spaces</h3>
           <p class="text-gray-600 mb-4">Information about study rooms, computer labs, and facility reservations.</p>
           <ul class="text-gray-700 space-y-2">
@@ -237,7 +280,7 @@
         </div>
 
         <!-- General Inquiries -->
-        <div class="border-l-4 border-orange-500 pl-6 py-4">
+        <div id="general-inquiries" class="border-l-4 border-orange-500 pl-6 py-4 transition-all duration-500">
           <h3 class="text-xl font-semibold text-gray-900 mb-3">General Inquiries</h3>
           <p class="text-gray-600 mb-4">Other questions, feedback, and general library information.</p>
           <ul class="text-gray-700 space-y-2">
@@ -407,6 +450,243 @@
 </div>
 
 <script>
+  // Search suggestions data para sa library management system
+  const searchSuggestions = [
+    // Account & Login related
+    { text: 'password reset', category: 'account-login', description: 'How to reset your password' },
+    { text: 'forgot password', category: 'account-login', description: 'Password recovery help' },
+    { text: 'student id format', category: 'account-login', description: 'Correct Student ID format' },
+    { text: 'login problems', category: 'account-login', description: 'Login troubleshooting' },
+    { text: 'account activation', category: 'account-login', description: 'Activate new account' },
+    { text: 'cant login', category: 'account-login', description: 'Login access issues' },
+
+    // Library Resources
+    { text: 'book search', category: 'library-resources', description: 'How to find books' },
+    { text: 'book reservation', category: 'library-resources', description: 'Reserve books online' },
+    { text: 'digital resources', category: 'library-resources', description: 'Access online databases' },
+    { text: 'research help', category: 'library-resources', description: 'Research assistance' },
+    { text: 'citation help', category: 'library-resources', description: 'Citation guidelines' },
+    { text: 'ebooks', category: 'library-resources', description: 'Digital book access' },
+
+    // Technical Support
+    { text: 'browser issues', category: 'technical-support', description: 'Browser compatibility' },
+    { text: 'slow website', category: 'technical-support', description: 'Performance issues' },
+    { text: 'mobile app', category: 'technical-support', description: 'Mobile support' },
+    { text: 'connection problems', category: 'technical-support', description: 'Internet connectivity' },
+    { text: 'error messages', category: 'technical-support', description: 'System errors' },
+
+    // Borrowing & Returns
+    { text: 'book renewal', category: 'borrowing-returns', description: 'Renew borrowed books' },
+    { text: 'overdue fines', category: 'borrowing-returns', description: 'Late return fees' },
+    { text: 'borrowing limits', category: 'borrowing-returns', description: 'How many books can I borrow' },
+    { text: 'return books', category: 'borrowing-returns', description: 'Where to return books' },
+    { text: 'lost book', category: 'borrowing-returns', description: 'Lost book procedures' },
+    { text: 'due dates', category: 'borrowing-returns', description: 'Check book due dates' },
+
+    // Study Spaces
+    { text: 'study room', category: 'study-spaces', description: 'Reserve study rooms' },
+    { text: 'computer lab', category: 'study-spaces', description: 'Computer access' },
+    { text: 'group study', category: 'study-spaces', description: 'Group study areas' },
+    { text: 'room reservation', category: 'study-spaces', description: 'Book study spaces' },
+
+    // General
+    { text: 'library hours', category: 'general-inquiries', description: 'Operating hours' },
+    { text: 'library policies', category: 'general-inquiries', description: 'Rules and policies' },
+    { text: 'services', category: 'general-inquiries', description: 'Library services' },
+    { text: 'feedback', category: 'general-inquiries', description: 'Submit feedback' }
+  ];
+
+  let currentSuggestionIndex = -1;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Support page loaded, initializing search...');
+
+    const searchInput = document.getElementById('supportSearch');
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+
+    console.log('Search input found:', !!searchInput);
+    console.log('Suggestions container found:', !!suggestionsContainer);
+
+    if (searchInput && suggestionsContainer) {
+      // Search input event listener
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        console.log('Search term:', searchTerm);
+
+        if (searchTerm.length > 0) {
+          showSuggestions(searchTerm);
+        } else {
+          hideSuggestions();
+        }
+      });
+
+      // Handle Enter key for search
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const searchTerm = this.value.trim();
+          console.log('Enter pressed, searching for:', searchTerm);
+          if (searchTerm) {
+            searchAndScroll(searchTerm);
+          }
+        } else if (e.key === 'Escape') {
+          hideSuggestions();
+        }
+      });
+
+      // Hide suggestions when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+          hideSuggestions();
+        }
+      });
+    } else {
+      console.error('Search elements not found!');
+    }
+  });
+
+  // Show search suggestions
+  function showSuggestions(searchTerm) {
+    console.log('Showing suggestions for:', searchTerm);
+
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (!suggestionsContainer) {
+      console.error('Suggestions container not found');
+      return;
+    }
+
+    const filteredSuggestions = searchSuggestions.filter(suggestion =>
+      suggestion.text.toLowerCase().includes(searchTerm) ||
+      suggestion.description.toLowerCase().includes(searchTerm)
+    ).slice(0, 8); // Limit to 8 suggestions
+
+    console.log('Filtered suggestions:', filteredSuggestions.length);
+
+    if (filteredSuggestions.length > 0) {
+      const suggestionsHTML = filteredSuggestions.map((suggestion, index) => {
+        return `
+          <div class="suggestion-item px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+               data-search="${suggestion.text}"
+               data-category="${suggestion.category}"
+               onclick="searchAndScroll('${suggestion.text}')">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <div>
+                <div class="text-sm font-medium text-gray-900">${suggestion.text}</div>
+                <div class="text-xs text-gray-500">${suggestion.description}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      suggestionsContainer.innerHTML = suggestionsHTML;
+      suggestionsContainer.classList.remove('hidden');
+      console.log('Suggestions displayed');
+    } else {
+      hideSuggestions();
+    }
+  }
+
+  // Hide suggestions
+  function hideSuggestions() {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    suggestionsContainer.classList.add('hidden');
+    currentSuggestionIndex = -1;
+  }
+
+  // Update suggestion highlight
+  function updateSuggestionHighlight(suggestions) {
+    suggestions.forEach((suggestion, index) => {
+      if (index === currentSuggestionIndex) {
+        suggestion.classList.add('bg-blue-50');
+      } else {
+        suggestion.classList.remove('bg-blue-50');
+      }
+    });
+  }
+
+  // Search and scroll to relevant section
+  function searchAndScroll(searchTerm) {
+    console.log('searchAndScroll called with:', searchTerm);
+
+    const searchInput = document.getElementById('supportSearch');
+    if (searchInput) {
+      searchInput.value = searchTerm;
+    }
+    hideSuggestions();
+
+    // Find matching suggestion to get category
+    const matchingSuggestion = searchSuggestions.find(suggestion =>
+      suggestion.text.toLowerCase() === searchTerm.toLowerCase()
+    );
+
+    console.log('Matching suggestion found:', !!matchingSuggestion);
+
+    if (matchingSuggestion) {
+      console.log('Scrolling to category:', matchingSuggestion.category);
+      scrollToSection(matchingSuggestion.category);
+    } else {
+      console.log('No direct match, searching in content');
+      // Fallback: search by keywords in content
+      searchInContent(searchTerm);
+    }
+  }
+
+  // Scroll to specific section with highlight effect
+  function scrollToSection(sectionId) {
+    console.log('scrollToSection called with:', sectionId);
+
+    const section = document.getElementById(sectionId);
+    console.log('Section found:', !!section);
+
+    if (section) {
+      // Remove previous highlights
+      document.querySelectorAll('.highlight-section').forEach(el => {
+        el.classList.remove('highlight-section');
+      });
+
+      // Add highlight to target section
+      section.classList.add('highlight-section');
+      console.log('Highlight added to section');
+
+      // Scroll to section with offset for header
+      const headerHeight = 150;
+      const sectionTop = section.offsetTop - headerHeight;
+
+      console.log('Scrolling to position:', sectionTop);
+
+      window.scrollTo({
+        top: sectionTop,
+        behavior: 'smooth'
+      });
+
+      // Remove highlight after animation
+      setTimeout(() => {
+        section.classList.remove('highlight-section');
+        console.log('Highlight removed');
+      }, 3000);
+    } else {
+      console.error('Section not found:', sectionId);
+    }
+  }
+
+  // Search in content when no direct match found
+  function searchInContent(searchTerm) {
+    const sections = document.querySelectorAll('[id^="account-"], [id^="library-"], [id^="technical-"], [id^="borrowing-"], [id^="study-"], [id^="general-"]');
+    const searchTermLower = searchTerm.toLowerCase();
+
+    for (const section of sections) {
+      const sectionText = section.textContent.toLowerCase();
+      if (sectionText.includes(searchTermLower)) {
+        scrollToSection(section.id);
+        break;
+      }
+    }
+  }
+
   // Scroll to Top functionality
   function scrollToTop() {
     window.scrollTo({

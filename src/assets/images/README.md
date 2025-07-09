@@ -1,6 +1,6 @@
-# Logo Assets
+# Image Assets
 
-This directory contains the logo files for the Benedicto College Library Management System.
+This directory contains the image files for the Benedicto College Library Management System, including logos and campus images.
 
 ## Current Logo
 
@@ -48,3 +48,43 @@ The logo automatically scales across different screen sizes:
 - Desktop: `h-16` (64px)
 
 You can adjust these classes in the HTML files if needed.
+
+## Campus Images
+
+This directory also contains campus and facility images used throughout the site:
+
+- **smart-classrooms.png** - Modern classroom technology
+- **collaborative-learning.png** - Students working together (placeholder)
+- **research-excellence.png** - Library research facilities (placeholder)
+- **campus-main.png** - Main campus view (placeholder)
+
+### Adding Your Own Campus Images
+
+1. **Prepare your images**:
+   - Recommended size: 800x600px or higher
+   - Format: PNG or JPG
+   - Optimize for web (compress to reduce file size)
+
+2. **Add images to this directory**:
+   ```
+   src/assets/images/
+   ├── your-campus-image.jpg
+   ├── your-classroom.png
+   └── your-facility.jpg
+   ```
+
+3. **Update the HTML paths**:
+   In `src/app/about/about.html`, update the image sources:
+   ```html
+   <img src="assets/images/your-campus-image.jpg"
+        alt="Your description"
+        class="w-full h-64 object-cover rounded-xl shadow-lg mb-4">
+   ```
+
+### Campus Image Guidelines
+
+- **Aspect Ratio**: 4:3 or 16:9 works best
+- **Resolution**: Minimum 800x600px for quality display
+- **File Size**: Keep under 500KB for fast loading
+- **Content**: Show actual campus facilities, students, or activities
+- **Alt Text**: Always include descriptive alt text for accessibility
