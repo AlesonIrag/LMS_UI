@@ -4,11 +4,16 @@ import { LoginComponent } from './login/login.component';
 import { AdminLoginComponent } from './admin-login/admin-login.component';
 import { FacultyLoginComponent } from './faculty-login/faculty-login.component';
 import { Dashboard } from './dashboard/dashboard';
+import { StudentDashboardComponent } from './student-dashboard/student-dashboard.component';
+import { FacultyDashboardComponent } from './faculty-dashboard/faculty-dashboard.component';
 import { PrivacyPolicyComponent } from './privacy-policy/privacy-policy.component';
 import { TermsOfServiceComponent } from './terms-of-service/terms-of-service.component';
 import { SupportComponent } from './support/support.component';
 import { ContactComponent } from './contact/contact.component';
 import { AboutComponent } from './about/about.component';
+import { AdminGuard } from './guards/admin.guard';
+import { StudentGuard } from './guards/student.guard';
+import { FacultyGuard } from './guards/faculty.guard';
 
 import { TestComponent } from './test/test.component';
 
@@ -17,11 +22,13 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'adminlogin', component: AdminLoginComponent },
     { path: 'facultylogin', component: FacultyLoginComponent },
-    { path: 'dashboard', component: Dashboard },
+    { path: 'dashboard', component: Dashboard, canActivate: [AdminGuard] },
+    { path: 'student-dashboard', component: StudentDashboardComponent, canActivate: [StudentGuard] },
+    { path: 'faculty-dashboard', component: FacultyDashboardComponent, canActivate: [FacultyGuard] },
     { path: 'privacy-policy', component: PrivacyPolicyComponent },
     { path: 'terms-of-service', component: TermsOfServiceComponent },
     { path: 'support', component: SupportComponent },
     { path: 'contact', component: ContactComponent },
-  { path: 'about', component: AboutComponent },
+    { path: 'about', component: AboutComponent },
     { path: 'test', component: TestComponent },
 ];

@@ -1,14 +1,34 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { StudentAuthService } from '../services/student-auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, CommonModule, FormsModule],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
 export class LoginComponent {
+
+  // Form data
+  studentId: string = '';
+  password: string = '';
+  isLoading: boolean = false;
+
+  // Error handling
+  loginError: string = '';
+  showLoginError: boolean = false;
+
+  // Password visibility toggle
+  showPassword: boolean = false;
+
+  constructor(
+    private router: Router,
+    private studentAuthService: StudentAuthService
+  ) {}
 
   // Prevent all non-numeric input including paste, drag & drop
   onStudentIdKeydown(event: KeyboardEvent): void {
@@ -169,10 +189,57 @@ export class LoginComponent {
     }
 
     if (isValid) {
-      alert('Form is valid! Ready to submit.');
-      // Handle successful login here
+      this.performLogin(studentIdInput.value, passwordInput.value);
     }
-    // Remove the generic alert message - individual field errors will show instead
+  }
+
+  // Perform student login
+  private performLogin(studentId: string, password: string): void {
+    this.isLoading = true;
+
+    this.studentAuthService.studentLogin(studentId, password).subscribe({
+      next: (success: boolean) => {
+        this.isLoading = false;
+
+        if (success) {
+          console.log('✅ Student login successful, redirecting to dashboard...');
+          this.router.navigate(['/student-dashboard']).catch(() => {
+            window.location.href = '/student-dashboard';
+          });
+        } else {
+          console.error('❌ Student login failed');
+          this.displayLoginError('Invalid student ID or password. Please try again.');
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('❌ Student login error:', error);
+        this.displayLoginError('Login failed. Please check your connection and try again.');
+      }
+    });
+  }
+
+  // Show login error message
+  private displayLoginError(message: string): void {
+    this.loginError = message;
+    this.showLoginError = true;
+
+    // Hide error after 5 seconds
+    setTimeout(() => {
+      this.showLoginError = false;
+      this.loginError = '';
+    }, 5000);
+  }
+
+  // Clear login error
+  clearLoginError(): void {
+    this.showLoginError = false;
+    this.loginError = '';
+  }
+
+  // Toggle password visibility
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
 }

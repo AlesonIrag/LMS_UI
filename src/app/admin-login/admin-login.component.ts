@@ -1,86 +1,87 @@
-import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.css'
 })
-export class AdminLoginComponent {
+export class AdminLoginComponent implements OnInit {
 
-  // Prevent all non-alphanumeric input for admin ID
-  onAdminIdKeydown(event: KeyboardEvent): void {
-    const allowedKeys = [
-      'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-      'Home', 'End'
-    ];
+  private returnUrl: string = '/dashboard';
+  isLoading: boolean = false;
 
-    // Allow navigation and control keys
-    if (allowedKeys.includes(event.key)) {
-      return;
-    }
+  // Password visibility toggle
+  showPassword: boolean = false;
 
-    // Allow alphanumeric characters
-    if (!/^[a-zA-Z0-9]$/.test(event.key)) {
-      event.preventDefault();
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    // Get return URL from route parameters or default to dashboard
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+
+    // Check current authentication state
+    const isAuth = this.authService.isAuthenticated();
+    const currentAdmin = this.authService.getCurrentAdmin();
+
+    // If already authenticated, redirect to dashboard
+    if (isAuth && currentAdmin) {
+      this.router.navigate([this.returnUrl]);
     }
   }
 
-  // Handle admin ID input formatting
-  onAdminIdInput(event: Event): void {
+  // Handle email input
+  onEmailInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    let value = input.value.replace(/[^a-zA-Z0-9]/g, '');
-    
-    // Limit to 10 characters for admin ID
-    if (value.length > 10) {
-      value = value.substring(0, 10);
-    }
-    
-    input.value = value.toUpperCase();
-    this.hideAdminIdError();
+    this.hideEmailError();
   }
 
-  // Handle admin ID blur validation
-  onAdminIdBlur(event: Event): void {
+  // Handle email blur validation
+  onEmailBlur(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.validateAdminId(input);
+    this.validateEmail(input);
   }
 
-  // Validate admin ID format
-  validateAdminId(input: HTMLInputElement): void {
+  // Validate email format
+  validateEmail(input: HTMLInputElement): void {
     const value = input.value.trim();
-    const errorDiv = document.getElementById('adminIdError');
-    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!value) {
-      this.showAdminIdError('Admin ID is required!');
+      this.showEmailError('Email is required!');
       input.classList.add('border-red-500');
       input.classList.remove('border-gray-200');
-    } else if (value.length < 5) {
-      this.showAdminIdError('Admin ID must be at least 5 characters!');
+    } else if (!emailRegex.test(value)) {
+      this.showEmailError('Please enter a valid email address!');
       input.classList.add('border-red-500');
       input.classList.remove('border-gray-200');
     } else {
-      this.hideAdminIdError();
+      this.hideEmailError();
       input.classList.remove('border-red-500');
       input.classList.add('border-gray-200');
     }
   }
 
-  // Show admin ID error
-  showAdminIdError(message: string): void {
-    const errorDiv = document.getElementById('adminIdError');
+  // Show email error
+  showEmailError(message: string): void {
+    const errorDiv = document.getElementById('emailError');
     if (errorDiv) {
       errorDiv.textContent = message;
       errorDiv.classList.remove('hidden');
     }
   }
 
-  // Hide admin ID error
-  hideAdminIdError(): void {
-    const errorDiv = document.getElementById('adminIdError');
+  // Hide email error
+  hideEmailError(): void {
+    const errorDiv = document.getElementById('emailError');
     if (errorDiv) {
       errorDiv.classList.add('hidden');
     }
@@ -133,17 +134,20 @@ export class AdminLoginComponent {
   onSubmit(event: Event): void {
     event.preventDefault();
 
-    const adminIdInput = document.getElementById('adminId') as HTMLInputElement;
+    if (this.isLoading) return;
+
+    const emailInput = document.getElementById('email') as HTMLInputElement;
     const passwordInput = document.getElementById('password') as HTMLInputElement;
 
     let isValid = true;
 
     // Always validate both fields to show individual error messages
-    this.validateAdminId(adminIdInput);
+    this.validateEmail(emailInput);
     this.validatePassword(passwordInput);
 
     // Check if both fields are valid
-    if (!adminIdInput.value.trim() || adminIdInput.value.length < 5) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailInput.value.trim() || !emailRegex.test(emailInput.value.trim())) {
       isValid = false;
     }
 
@@ -152,8 +156,56 @@ export class AdminLoginComponent {
     }
 
     if (isValid) {
-      alert('Admin login form is valid! Ready to submit to admin database.');
-      // Handle successful admin login here - connect to admin database
+      this.isLoading = true;
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      this.authService.adminLogin(email, password).subscribe({
+        next: (success: boolean) => {
+          this.isLoading = false;
+
+          if (success) {
+            // Force refresh authentication state and then navigate
+            this.authService.refreshAuthState();
+
+            // Add a small delay to ensure authentication state is fully updated
+            setTimeout(() => {
+              this.router.navigate([this.returnUrl]).catch(() => {
+                // Fallback to direct navigation
+                window.location.href = this.returnUrl;
+              });
+            }, 200);
+          } else {
+            console.log('❌ Login failed - showing error message');
+            this.showLoginError('Invalid email or password. Please try again.');
+          }
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('❌ Login error:', error);
+          this.showLoginError('Login failed. Please check your connection and try again.');
+        }
+      });
     }
   }
+
+  // Show general login error
+  showLoginError(message: string): void {
+    const errorDiv = document.getElementById('loginError');
+    if (errorDiv) {
+      errorDiv.textContent = message;
+      errorDiv.classList.remove('hidden');
+
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        errorDiv.classList.add('hidden');
+      }, 5000);
+    }
+  }
+
+  // Toggle password visibility
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
 }

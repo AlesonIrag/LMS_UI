@@ -1,0 +1,1147 @@
+<!-- Modern Interactive Library Management Dashboard -->
+<div class="min-h-screen transition-colors duration-300 flex" [class]="isDarkMode ? 'bg-gray-900' : 'bg-gray-50'" [attr.data-theme]="isDarkMode ? 'dark' : 'light'">
+  <!-- Mobile Menu Button -->
+  <button
+    (click)="toggleMobileMenu()"
+    class="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg transition-colors duration-200"
+    [class]="isDarkMode ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-100'"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+
+  <!-- Mobile Overlay -->
+  <div
+    *ngIf="isMobileMenuOpen"
+    class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+    (click)="closeMobileMenu()"
+  ></div>
+
+  <!-- Left Navigation Pane (Fixed) -->
+  <aside
+    class="w-64 shadow-lg flex-shrink-0 border-r flex flex-col transition-all duration-300"
+    [class]="getAsideClasses()"
+    [style.transform]="isMobileMenuOpen ? 'translateX(0)' : ''"
+  >
+    <!-- Header -->
+    <div class="p-6 border-b transition-colors duration-300" [class]="isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+      <div class="flex items-center justify-center">
+        <img
+          src="assets/images/BcLogo.png"
+          alt="Benedicto College Logo"
+          class="h-12 w-auto object-contain"
+        >
+      </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 p-4">
+      <div class="space-y-2">
+        <a (click)="onNavigate('dashboard'); closeMobileMenu()" [class]="getNavLinkClass('dashboard')" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+          </svg>
+          Dashboard
+        </a>
+        <a (click)="onNavigate('borrow'); closeMobileMenu()" [class]="getNavLinkClass('borrow')" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+          Borrow Books
+        </a>
+        <a (click)="onNavigate('loans'); closeMobileMenu()" [class]="getNavLinkClass('loans')" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          My Loans
+        </a>
+        <a (click)="onNavigate('reservations'); closeMobileMenu()" [class]="getNavLinkClass('reservations')" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l-.5 8.5A2 2 0 0013.5 21h-3A2 2 0 018.5 15.5L8 7z"></path>
+          </svg>
+          Reservations
+        </a>
+        <a (click)="onNavigate('history'); closeMobileMenu()" [class]="getNavLinkClass('history')" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          History
+        </a>
+        <a (click)="onNavigate('fines'); closeMobileMenu()" [class]="getNavLinkClass('fines')" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+          </svg>
+          Fines & Fees
+        </a>
+      </div>
+    </nav>
+
+    <!-- Logout Button -->
+    <div class="p-4 border-t transition-colors duration-300" [class]="isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+      <button (click)="onLogout()" class="logout-btn w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3v1"></path>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex">
+    <!-- Dashboard Content -->
+    <div class="flex-1 flex flex-col">
+      <!-- Top Header -->
+      <header [class]="getHeaderClasses()">
+        <div class="flex justify-between items-center min-h-[64px]">
+          <div class="flex-1 min-w-0">
+            <h2 class="text-xl lg:text-2xl font-bold truncate" [class]="getTextClasses()">Dashboard</h2>
+          </div>
+          <div class="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
+            <!-- Dark Mode Toggle -->
+            <button
+              (click)="toggleDarkMode()"
+              class="p-2 rounded-lg transition-colors duration-200"
+              [class]="isDarkMode ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-600 hover:text-gray-900'"
+              title="Toggle Dark Mode"
+            >
+              <svg *ngIf="!isDarkMode" class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 718.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+              </svg>
+              <svg *ngIf="isDarkMode" class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </button>
+            <!-- Notification Bell -->
+            <button
+              (click)="onNotificationClick()"
+              class="relative p-2 transition-colors duration-200"
+              [class]="isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'"
+            >
+              <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+              <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white notification-badge"></span>
+            </button>
+            <!-- User Profile -->
+            <div class="relative">
+              <button
+                (click)="onProfileClick()"
+                class="flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200"
+                [class]="isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'"
+              >
+                <img class="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%233B82F6'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-family='Arial' font-size='14' font-weight='bold'%3ES%3C/text%3E%3C/svg%3E" alt="Student">
+              </button>
+            </div>
+
+
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Dashboard Content -->
+      <main class="flex-1 p-4 lg:p-6 overflow-y-auto transition-colors duration-300" [class]="getMainContentClasses()">
+        <div class="max-w-7xl mx-auto">
+
+          <!-- Dashboard View -->
+          <div *ngIf="currentView === 'dashboard'">
+            <!-- Quick Search Section -->
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold mb-4" [class]="getTextClasses()">Quick Book Search</h3>
+              <div class="p-6 rounded-lg shadow-sm border" [class]="getCardClasses()">
+                <div class="search-container flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                  <input
+                    [(ngModel)]="searchQuery"
+                    (keyup.enter)="onQuickSearch()"
+                    type="text"
+                    placeholder="Search for books, authors, or subjects..."
+                    class="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-lg"
+                    [class]="isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'"
+                  >
+                  <button
+                    (click)="onQuickSearch()"
+                    [disabled]="isSearching"
+                    class="search-button px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200 font-medium w-full sm:w-auto"
+                  >
+                    <span *ngIf="!isSearching" class="flex items-center">
+                      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                      Search
+                    </span>
+                    <span *ngIf="isSearching" class="flex items-center">
+                      <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Searching...
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          <!-- Latest News Section -->
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-4" [class]="getTextClasses()">Latest News</h3>
+            <div class="space-y-3">
+              <div class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                  <p [class]="getSecondaryTextClasses()">Library closed on July 12.</p>
+                </div>
+              </div>
+              <div class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                  <p [class]="getSecondaryTextClasses()">New Science books available!</p>
+                </div>
+              </div>
+              <div class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                  <p [class]="getSecondaryTextClasses()">Join the Reading Challenge.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Links Section -->
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-4" [class]="getTextClasses()">Quick Links</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Search Books -->
+              <div (click)="onQuickLink('search')" class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-blue-100 mr-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold" [class]="getTextClasses()">Search Books</h4>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">Find books in our catalog</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Renew Books -->
+              <div (click)="onQuickLink('renew')" class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-green-100 mr-4">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold" [class]="getTextClasses()">Renew Books</h4>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">Extend your loan period</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pay Fines -->
+              <div (click)="onQuickLink('pay-fines')" class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-yellow-100 mr-4">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold" [class]="getTextClasses()">Pay Fines</h4>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">Clear outstanding fees</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reserve Books -->
+              <div (click)="onQuickLink('reserve')" class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-purple-100 mr-4">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l-.5 8.5A2 2 0 0013.5 21h-3A2 2 0 018.5 15.5L8 7z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold" [class]="getTextClasses()">Reserve Books</h4>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">Hold books for pickup</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Study Rooms -->
+              <div (click)="onQuickLink('study-rooms')" class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-indigo-100 mr-4">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold" [class]="getTextClasses()">Study Rooms</h4>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">Book study spaces</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Research Help -->
+              <div (click)="onQuickLink('research-help')" class="p-4 rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105" [class]="getCardClasses()">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-red-100 mr-4">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold" [class]="getTextClasses()">Research Help</h4>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">Get librarian assistance</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Posts & Announcements Section -->
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-4" [class]="getTextClasses()">Posts & Announcements</h3>
+            <div class="p-6 rounded-lg shadow-sm border transition-shadow duration-200" [class]="getCardClasses()">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 mr-4">
+                  <svg class="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-lg font-medium" [class]="getTextClasses()">Return books by July 10 to avoid fees.</p>
+                  <p class="text-sm mt-1" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">Posted 2 hours ago</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Widgets Section - Only visible on mobile -->
+          <div class="lg:hidden space-y-6">
+            <!-- Weather Widget -->
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-lg font-semibold mb-1">Weather</h4>
+                  <p class="text-3xl font-bold" id="temperature-mobile">{{ temperature }}</p>
+                  <p class="text-blue-100" id="location-mobile">{{ location }}</p>
+                </div>
+                <div class="text-right">
+                  <svg class="w-12 h-12 text-yellow-300" fill="currentColor" viewBox="0 0 24 24" id="weather-icon-mobile">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Horoscope Widget -->
+            <div class="border rounded-lg p-6 transition-colors duration-300" [class]="getCardClasses()">
+              <div class="flex items-center mb-3">
+                <svg class="w-6 h-6 text-purple-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <h4 class="text-lg font-semibold" [class]="getTextClasses()">Horoscope</h4>
+              </div>
+              <p [class]="getSecondaryTextClasses()"><strong>Cancer:</strong> Study focus brings good results.</p>
+            </div>
+
+            <!-- Calendar Events Widget -->
+            <div class="border rounded-lg p-6 transition-colors duration-300" [class]="getCardClasses()">
+              <div class="flex items-center mb-4">
+                <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <h4 class="text-lg font-semibold" [class]="getTextClasses()">Upcoming Events</h4>
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <div>
+                    <p class="font-medium" [class]="getTextClasses()">July 10 – Book Fair</p>
+                    <p class="text-sm" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">3 days remaining</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-orange-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <div>
+                    <p class="font-medium" [class]="getTextClasses()">July 15 – Research Submission</p>
+                    <p class="text-sm" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">8 days remaining</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quote of the Day Widget -->
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+              <div class="flex items-center mb-3">
+                <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                </svg>
+                <h4 class="text-lg font-semibold">Quote of the Day</h4>
+              </div>
+              <p class="text-purple-100 italic">"A room without books is like a body without a soul."</p>
+            </div>
+
+            <!-- My Library Stats Widget -->
+            <div class="border rounded-lg p-6 transition-colors duration-300" [class]="getCardClasses()">
+              <h4 class="text-lg font-semibold mb-4" [class]="getTextClasses()">My Library Stats</h4>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    <span [class]="getSecondaryTextClasses()">Books Borrowed</span>
+                  </div>
+                  <span class="text-xl font-bold" [class]="getTextClasses()" id="borrowed-count-mobile">{{ studentStats.borrowed }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span [class]="getSecondaryTextClasses()">Books Returned</span>
+                  </div>
+                  <span class="text-xl font-bold" [class]="getTextClasses()" id="returned-count-mobile">{{ studentStats.returned }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg class="w-6 h-6 text-purple-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l-.5 8.5A2 2 0 0013.5 21h-3A2 2 0 018.5 15.5L8 7z"></path>
+                    </svg>
+                    <span [class]="getSecondaryTextClasses()">Reservations</span>
+                  </div>
+                  <span class="text-xl font-bold" [class]="getTextClasses()" id="reservations-count-mobile">{{ studentStats.reservations }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                    <span [class]="getSecondaryTextClasses()">Outstanding Fines</span>
+                  </div>
+                  <span class="text-xl font-bold" [class]="getTextClasses()" id="fines-count-mobile">₱{{ studentStats.fines }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <!-- Borrow Books View -->
+          <div *ngIf="currentView === 'borrow'">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold mb-4" [class]="getTextClasses()">Borrow Books</h2>
+
+              <!-- Search and Filter Controls -->
+              <div class="mb-6 p-4 rounded-lg border" [class]="getCardClasses()">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <input
+                    [(ngModel)]="searchFilter"
+                    type="text"
+                    placeholder="Search books..."
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    [class]="isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'"
+                  >
+                  <select
+                    [(ngModel)]="categoryFilter"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    [class]="isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'"
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Programming">Programming</option>
+                    <option value="Database">Database</option>
+                  </select>
+                  <select
+                    [(ngModel)]="statusFilter"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    [class]="isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="Available">Available</option>
+                    <option value="Checked Out">Checked Out</option>
+                    <option value="Reserved">Reserved</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Books Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div *ngFor="let book of paginatedItems" class="border rounded-lg p-6 hover:shadow-lg transition-shadow" [class]="getCardClasses()">
+                  <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2" [class]="getTextClasses()">{{ book.title }}</h3>
+                    <p class="text-sm mb-1" [class]="getSecondaryTextClasses()">by {{ book.author }}</p>
+                    <p class="text-sm mb-2" [class]="getSecondaryTextClasses()">{{ book.category }}</p>
+                    <span class="inline-block px-2 py-1 text-xs rounded-full" [class]="getAvailabilityClass(book.availability)">
+                      {{ book.availability }}
+                    </span>
+                  </div>
+                  <div class="mb-4">
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">
+                      <strong>Location:</strong> {{ book.location }}
+                    </p>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">
+                      <strong>ISBN:</strong> {{ book.isbn }}
+                    </p>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button
+                      *ngIf="book.availability === 'Available'"
+                      (click)="borrowBook(book.id)"
+                      class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Borrow
+                    </button>
+                    <button
+                      *ngIf="book.availability === 'Checked Out'"
+                      (click)="reserveBook(book.id)"
+                      class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                    >
+                      Reserve
+                    </button>
+                    <button
+                      *ngIf="book.availability === 'Reserved'"
+                      disabled
+                      class="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed"
+                    >
+                      Reserved
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pagination -->
+              <div *ngIf="totalPages > 1" class="mt-6 flex justify-center">
+                <nav class="flex space-x-2">
+                  <button
+                    (click)="changePage(currentPage - 1)"
+                    [disabled]="currentPage === 1"
+                    class="px-3 py-2 border rounded-lg disabled:opacity-50"
+                    [class]="isDarkMode ? 'border-gray-600 text-gray-300' : 'border-gray-300 text-gray-700'"
+                  >
+                    Previous
+                  </button>
+                  <span class="px-3 py-2" [class]="getTextClasses()">
+                    Page {{ currentPage }} of {{ totalPages }}
+                  </span>
+                  <button
+                    (click)="changePage(currentPage + 1)"
+                    [disabled]="currentPage === totalPages"
+                    class="px-3 py-2 border rounded-lg disabled:opacity-50"
+                    [class]="isDarkMode ? 'border-gray-600 text-gray-300' : 'border-gray-300 text-gray-700'"
+                  >
+                    Next
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <!-- My Loans View -->
+          <div *ngIf="currentView === 'loans'">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold mb-4" [class]="getTextClasses()">My Loans</h2>
+
+              <!-- Loans Table -->
+              <div class="overflow-x-auto">
+                <table class="w-full border rounded-lg" [class]="getCardClasses()">
+                  <thead class="border-b" [class]="isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Book</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Borrowed</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Due Date</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y" [class]="isDarkMode ? 'divide-gray-700' : 'divide-gray-200'">
+                    <tr *ngFor="let loan of paginatedItems" class="hover:bg-opacity-50" [class]="isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'">
+                      <td class="px-6 py-4">
+                        <div>
+                          <div class="text-sm font-medium" [class]="getTextClasses()">{{ loan.book.title }}</div>
+                          <div class="text-sm" [class]="getSecondaryTextClasses()">by {{ loan.book.author }}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-sm" [class]="getSecondaryTextClasses()">
+                        {{ loan.borrowDate | date:'MMM d, y' }}
+                      </td>
+                      <td class="px-6 py-4 text-sm">
+                        <div [class]="loan.status === 'Overdue' ? 'text-red-600' : getSecondaryTextClasses()">
+                          {{ loan.dueDate | date:'MMM d, y' }}
+                          <div *ngIf="loan.status === 'Overdue'" class="text-xs text-red-600">
+                            {{ getDaysUntilDue(loan.dueDate) * -1 }} days overdue
+                          </div>
+                          <div *ngIf="loan.status === 'Active' && getDaysUntilDue(loan.dueDate) <= 3" class="text-xs text-yellow-600">
+                            Due in {{ getDaysUntilDue(loan.dueDate) }} days
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" [class]="getStatusClass(loan.status)">
+                          {{ loan.status }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm">
+                        <button
+                          *ngIf="loan.renewalCount < loan.maxRenewals && loan.status === 'Active'"
+                          (click)="renewLoan(loan.id)"
+                          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mr-2"
+                        >
+                          Renew ({{ loan.renewalCount }}/{{ loan.maxRenewals }})
+                        </button>
+                        <span *ngIf="loan.renewalCount >= loan.maxRenewals" class="text-xs" [class]="getSecondaryTextClasses()">
+                          Max renewals reached
+                        </span>
+                        <span *ngIf="loan.fineAmount" class="text-xs text-red-600 block">
+                          Fine: ₱{{ loan.fineAmount }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reservations View -->
+          <div *ngIf="currentView === 'reservations'">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold mb-4" [class]="getTextClasses()">My Reservations</h2>
+
+              <!-- Reservations Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div *ngFor="let reservation of paginatedItems" class="border rounded-lg p-6" [class]="getCardClasses()">
+                  <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2" [class]="getTextClasses()">{{ reservation.book.title }}</h3>
+                    <p class="text-sm mb-1" [class]="getSecondaryTextClasses()">by {{ reservation.book.author }}</p>
+                    <span class="inline-block px-2 py-1 text-xs rounded-full" [class]="getStatusClass(reservation.status)">
+                      {{ reservation.status }}
+                    </span>
+                  </div>
+                  <div class="mb-4 space-y-2">
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">
+                      <strong>Reserved:</strong> {{ reservation.reservationDate | date:'MMM d, y' }}
+                    </p>
+                    <p class="text-sm" [class]="getSecondaryTextClasses()">
+                      <strong>Expires:</strong> {{ reservation.expiryDate | date:'MMM d, y' }}
+                    </p>
+                    <p *ngIf="reservation.queuePosition" class="text-sm" [class]="getSecondaryTextClasses()">
+                      <strong>Queue Position:</strong> {{ reservation.queuePosition }}
+                    </p>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button
+                      *ngIf="reservation.status === 'Ready'"
+                      class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Pick Up Now
+                    </button>
+                    <button
+                      (click)="cancelReservation(reservation.id)"
+                      class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- History View -->
+          <div *ngIf="currentView === 'history'">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold mb-4" [class]="getTextClasses()">Borrowing History</h2>
+
+              <!-- History Table -->
+              <div class="overflow-x-auto">
+                <table class="w-full border rounded-lg" [class]="getCardClasses()">
+                  <thead class="border-b" [class]="isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Book</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Borrowed</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Due Date</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Returned</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" [class]="getSecondaryTextClasses()">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y" [class]="isDarkMode ? 'divide-gray-700' : 'divide-gray-200'">
+                    <tr *ngFor="let loan of paginatedItems" class="hover:bg-opacity-50" [class]="isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'">
+                      <td class="px-6 py-4">
+                        <div>
+                          <div class="text-sm font-medium" [class]="getTextClasses()">{{ loan.book.title }}</div>
+                          <div class="text-sm" [class]="getSecondaryTextClasses()">by {{ loan.book.author }}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-sm" [class]="getSecondaryTextClasses()">
+                        {{ loan.borrowDate | date:'MMM d, y' }}
+                      </td>
+                      <td class="px-6 py-4 text-sm" [class]="getSecondaryTextClasses()">
+                        {{ loan.dueDate | date:'MMM d, y' }}
+                      </td>
+                      <td class="px-6 py-4 text-sm" [class]="getSecondaryTextClasses()">
+                        {{ loan.returnDate | date:'MMM d, y' }}
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" [class]="getStatusClass(loan.status)">
+                          {{ loan.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fines & Fees View -->
+          <div *ngIf="currentView === 'fines'">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold mb-4" [class]="getTextClasses()">Fines & Fees</h2>
+
+              <!-- Summary Card -->
+              <div class="mb-6 p-6 rounded-lg border" [class]="getCardClasses()">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">₱{{ getTotalOutstandingFines() }}</div>
+                    <div class="text-sm" [class]="getSecondaryTextClasses()">Outstanding Fines</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">₱{{ getTotalPaidFines() }}</div>
+                    <div class="text-sm" [class]="getSecondaryTextClasses()">Total Paid</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold" [class]="getTextClasses()">{{ fines.length }}</div>
+                    <div class="text-sm" [class]="getSecondaryTextClasses()">Total Fines</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fines List -->
+              <div class="space-y-4">
+                <div *ngFor="let fine of paginatedItems" class="border rounded-lg p-6" [class]="getCardClasses()">
+                  <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                      <h3 class="text-lg font-semibold mb-2" [class]="getTextClasses()">{{ fine.type }} Fine</h3>
+                      <p class="text-sm mb-2" [class]="getSecondaryTextClasses()">{{ fine.description }}</p>
+                      <div class="flex items-center space-x-4 text-sm" [class]="getSecondaryTextClasses()">
+                        <span><strong>Issued:</strong> {{ fine.dateIssued | date:'MMM d, y' }}</span>
+                        <span *ngIf="fine.datePaid"><strong>Paid:</strong> {{ fine.datePaid | date:'MMM d, y' }}</span>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-xl font-bold mb-2" [class]="getTextClasses()">₱{{ fine.amount }}</div>
+                      <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" [class]="getStatusClass(fine.status)">
+                        {{ fine.status }}
+                      </span>
+                    </div>
+                  </div>
+                  <div *ngIf="fine.status === 'Pending'" class="flex space-x-2">
+                    <button
+                      (click)="payFine(fine.id)"
+                      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Pay Fine
+                    </button>
+                    <button
+                      class="px-4 py-2 border rounded-lg transition-colors"
+                      [class]="isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'"
+                    >
+                      Request Waiver
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- Right Sidebar -->
+    <aside class="right-sidebar w-80 shadow-lg border-l flex-shrink-0 transition-colors duration-300" [class]="isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
+      <div class="p-6 space-y-6">
+        <!-- Weather Widget -->
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-lg font-semibold mb-1">Weather</h4>
+              <p class="text-3xl font-bold" id="temperature">{{ temperature }}</p>
+              <p class="text-blue-100" id="location">{{ location }}</p>
+            </div>
+            <div class="text-right">
+              <svg class="w-12 h-12 text-yellow-300" fill="currentColor" viewBox="0 0 24 24" id="weather-icon">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horoscope Widget -->
+        <div class="border rounded-lg p-6 transition-colors duration-300" [class]="getCardClasses()">
+          <div class="flex items-center mb-3">
+            <svg class="w-6 h-6 text-purple-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <h4 class="text-lg font-semibold" [class]="getTextClasses()">Horoscope</h4>
+          </div>
+          <p [class]="getSecondaryTextClasses()"><strong>Cancer:</strong> Study focus brings good results.</p>
+        </div>
+
+        <!-- Calendar Events Widget -->
+        <div class="border rounded-lg p-6 transition-colors duration-300" [class]="getCardClasses()">
+          <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <h4 class="text-lg font-semibold" [class]="getTextClasses()">Upcoming Events</h4>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <div>
+                <p class="font-medium" [class]="getTextClasses()">July 10 – Book Fair</p>
+                <p class="text-sm" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">3 days remaining</p>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-orange-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <div>
+                <p class="font-medium" [class]="getTextClasses()">July 15 – Research Submission</p>
+                <p class="text-sm" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">8 days remaining</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quote of the Day Widget -->
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+          <div class="flex items-center mb-3">
+            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+            </svg>
+            <h4 class="text-lg font-semibold">Quote of the Day</h4>
+          </div>
+          <p class="text-purple-100 italic">"A room without books is like a body without a soul."</p>
+        </div>
+
+        <!-- My Library Stats Widget -->
+        <div class="border rounded-lg p-6 transition-colors duration-300" [class]="getCardClasses()">
+          <h4 class="text-lg font-semibold mb-4" [class]="getTextClasses()">My Library Stats</h4>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                <span [class]="getSecondaryTextClasses()">Books Borrowed</span>
+              </div>
+              <span class="text-xl font-bold" [class]="getTextClasses()" id="borrowed-count">{{ studentStats.borrowed }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span [class]="getSecondaryTextClasses()">Books Returned</span>
+              </div>
+              <span class="text-xl font-bold" [class]="getTextClasses()" id="returned-count">{{ studentStats.returned }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-purple-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l-.5 8.5A2 2 0 0013.5 21h-3A2 2 0 018.5 15.5L8 7z"></path>
+                </svg>
+                <span [class]="getSecondaryTextClasses()">Reservations</span>
+              </div>
+              <span class="text-xl font-bold" [class]="getTextClasses()" id="reservations-count">{{ studentStats.reservations }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                <span [class]="getSecondaryTextClasses()">Outstanding Fines</span>
+              </div>
+              <span class="text-xl font-bold" [class]="getTextClasses()" id="fines-count">₱{{ studentStats.fines }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div
+    *ngIf="isMobileMenuOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+    (click)="closeMobileMenu()"
+  ></div>
+
+  <!-- AI Chat Assistant Widget -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <!-- Tooltip -->
+    <div
+      *ngIf="!isChatOpen && showTooltip"
+      class="absolute bottom-16 right-0 mb-2 px-4 py-2 bg-white rounded-lg shadow-lg border border-gray-200 text-sm text-gray-700 whitespace-nowrap transform transition-all duration-300 ease-in-out"
+      [class]="isDarkMode ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-white border-gray-200 text-gray-700'"
+    >
+      <div class="relative">
+        Need help finding books?
+        <!-- Tooltip arrow -->
+        <div class="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"
+             [class]="isDarkMode ? 'border-t-gray-800' : 'border-t-white'"></div>
+      </div>
+    </div>
+
+    <!-- Chat Window (Expanded) -->
+    <div
+      *ngIf="isChatOpen"
+      class="bg-white rounded-2xl shadow-2xl border border-gray-200 w-80 h-96 flex flex-col transform transition-all duration-300 ease-in-out origin-bottom-right"
+      [class]="isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'"
+    >
+      <!-- Chat Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 rounded-t-2xl"
+           [class]="isDarkMode ? 'border-gray-600 bg-gray-750' : 'border-gray-200 bg-gray-50'">
+        <div class="flex items-center space-x-3">
+          <div class="relative">
+            <img
+              src="assets/images/bc-ai-avatar.svg"
+              alt="BC-AI"
+              class="w-8 h-8 rounded-full bg-blue-500 object-cover"
+              (error)="onAvatarError($event)"
+            >
+            <!-- Online indicator -->
+            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
+                 [class]="isDarkMode ? 'border-gray-800' : 'border-white'"></div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-sm" [class]="getTextClasses()">BC-AI</h3>
+            <p class="text-xs" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">Online</p>
+          </div>
+        </div>
+        <button
+          (click)="toggleChat()"
+          class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200"
+          [class]="isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Chat Messages Area -->
+      <div class="flex-1 p-4 overflow-y-auto space-y-3" #chatMessagesContainer>
+        <!-- Welcome Message -->
+        <div class="flex items-start space-x-2">
+          <img
+            src="assets/images/bc-ai-avatar.svg"
+            alt="BC-AI"
+            class="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 mt-1"
+            (error)="onAvatarError($event)"
+          >
+          <div class="bg-gray-100 rounded-lg px-3 py-2 max-w-xs"
+               [class]="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
+            <p class="text-sm" [class]="getTextClasses()">
+              Hi! I'm BC-AI, your library assistant. How can I help you find books today?
+            </p>
+          </div>
+        </div>
+
+        <!-- Sample conversation -->
+        <div *ngFor="let message of chatMessages" class="flex" [class.justify-end]="message.isUser">
+          <div class="flex items-start space-x-2" [class.flex-row-reverse]="message.isUser" [class.space-x-reverse]="message.isUser">
+            <img
+              *ngIf="!message.isUser"
+              src="assets/images/bc-ai-avatar.svg"
+              alt="BC-AI"
+              class="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 mt-1"
+              (error)="onAvatarError($event)"
+            >
+            <div
+              class="rounded-lg px-3 py-2 max-w-xs"
+              [class]="message.isUser ?
+                'bg-blue-500 text-white' :
+                (isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')"
+            >
+              <p class="text-sm">{{ message.text }}</p>
+              <p class="text-xs mt-1 opacity-70">{{ message.time }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div *ngIf="isTyping" class="flex items-start space-x-2">
+          <img
+            src="assets/images/bc-ai-avatar.svg"
+            alt="BC-AI"
+            class="w-6 h-6 rounded-full bg-blue-500 flex-shrink-0 mt-1"
+            (error)="onAvatarError($event)"
+          >
+          <div class="bg-gray-100 rounded-lg px-3 py-2"
+               [class]="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
+            <div class="flex space-x-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="p-4 border-t border-gray-200"
+           [class]="isDarkMode ? 'border-gray-600' : 'border-gray-200'">
+        <div class="flex space-x-2">
+          <input
+            type="text"
+            [(ngModel)]="chatInput"
+            (keyup.enter)="sendMessage()"
+            placeholder="Type your message..."
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            [class]="isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'"
+          >
+          <button
+            (click)="sendMessage()"
+            [disabled]="!chatInput.trim()"
+            class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Chat Button (Collapsed) -->
+    <button
+      *ngIf="!isChatOpen"
+      (click)="toggleChat()"
+      (mouseenter)="showTooltip = true"
+      (mouseleave)="showTooltip = false"
+      class="w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center relative overflow-hidden"
+    >
+      <!-- Pulse animation -->
+      <div class="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20"></div>
+
+      <!-- Avatar or Chat Icon -->
+      <img
+        src="assets/images/bc-ai-avatar.svg"
+        alt="BC-AI"
+        class="w-8 h-8 rounded-full object-cover relative z-10"
+        (error)="onAvatarError($event)"
+      >
+
+      <!-- Fallback icon if image fails -->
+      <svg
+        *ngIf="avatarError"
+        class="w-6 h-6 relative z-10"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+      </svg>
+
+      <!-- Notification badge -->
+      <div *ngIf="hasUnreadMessages" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+        {{ unreadCount }}
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div
+  *ngIf="showLogoutModal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+  (click)="cancelLogout()"
+>
+  <div
+    class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100"
+    [class]="isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Modal Header -->
+    <div class="p-6 border-b" [class]="isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold" [class]="isDarkMode ? 'text-white' : 'text-gray-900'">
+            Confirm Logout
+          </h3>
+          <p class="text-sm" [class]="isDarkMode ? 'text-gray-300' : 'text-gray-600'">
+            You are about to sign out of your student session
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6">
+      <p class="text-sm" [class]="isDarkMode ? 'text-gray-300' : 'text-gray-600'">
+        Are you sure you want to log out? You will need to sign in again to access the student dashboard.
+      </p>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-6 border-t flex flex-col sm:flex-row gap-3 sm:gap-4" [class]="isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+      <!-- Cancel Button -->
+      <button
+        type="button"
+        (click)="cancelLogout()"
+        class="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border transition-colors duration-200"
+        [class]="isDarkMode ?
+          'border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500' :
+          'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'"
+      >
+        <span class="flex items-center justify-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          No, Stay Logged In
+        </span>
+      </button>
+
+      <!-- Confirm Button -->
+      <button
+        type="button"
+        (click)="confirmLogout()"
+        class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-200 transition-colors duration-200"
+      >
+        <span class="flex items-center justify-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          Yes, Log Out
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

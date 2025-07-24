@@ -1,20 +1,27 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
+import { WeatherLoggerService } from '../services/weather-logger.service';
+import { AuthService } from '../services/auth.service';
 
-interface WeatherData {
-  main: {
-    temp: number;
-  };
-  weather: Array<{
-    main: string;
+interface WeatherResponse {
+  success: boolean;
+  data: {
+    temperature: number;
+    location: string;
+    condition: string;
     description: string;
     icon: string;
-  }>;
-  name: string;
+    humidity: number;
+    pressure: number;
+    windSpeed: number;
+    timestamp: string;
+    fallback?: boolean;
+  };
+  message?: string;
 }
 
 interface LibraryStats {
@@ -44,6 +51,9 @@ export class Dashboard implements OnInit, OnDestroy {
   // Dark mode and mobile menu state
   isDarkMode: boolean = false;
   isMobileMenuOpen: boolean = false;
+
+  // Logout modal state
+  showLogoutModal: boolean = false;
 
   // Chat widget state
   isChatOpen: boolean = false;
@@ -105,9 +115,20 @@ export class Dashboard implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private weatherLogger: WeatherLoggerService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    console.log('🎯 Dashboard component initialized successfully!');
+    console.log('📊 Loading dashboard data...');
+
+    // Perform startup tests and logging
+    await this.weatherLogger.performStartupTests();
+
     this.loadWeatherData();
     this.startStatsUpdates();
     this.animateCounters();
@@ -115,6 +136,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
+      this.weatherLogger.info('Scheduled weather update triggered');
       this.loadWeatherData();
     });
 
@@ -130,32 +152,52 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   private loadWeatherData(): void {
-    // OpenWeatherMap API key - replace with your actual API key
-    const apiKey = 'your_openweathermap_api_key';
-    const city = 'Cebu City,PH';
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+    // Call backend weather API instead of OpenWeatherMap directly
+    const backendUrl = 'http://localhost:3000/api/v1/weather';
 
-    // For demo purposes, we'll simulate the API call
-    // In production, uncomment the HTTP call below and add your API key
+    this.http.get<WeatherResponse>(backendUrl).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const data = response.data;
+          this.temperature = `${data.temperature}°C`;
+          this.location = data.location;
+          this.updateWeatherIcon(data.condition);
 
-    /*
-    this.http.get<WeatherData>(url).subscribe({
-      next: (data) => {
-        this.temperature = `${Math.round(data.main.temp)}°C`;
-        this.location = data.name;
-        this.updateWeatherIcon(data.weather[0].main);
+          // Log weather update
+          this.weatherLogger.logWeatherUpdate(this.temperature, this.location);
+
+          // Update DOM elements (both desktop and mobile)
+          setTimeout(() => {
+            const tempElement = document.getElementById('temperature');
+            const locationElement = document.getElementById('location');
+            const tempElementMobile = document.getElementById('temperature-mobile');
+            const locationElementMobile = document.getElementById('location-mobile');
+
+            if (tempElement) tempElement.textContent = this.temperature;
+            if (locationElement) locationElement.textContent = this.location;
+            if (tempElementMobile) tempElementMobile.textContent = this.temperature;
+            if (locationElementMobile) locationElementMobile.textContent = this.location;
+          }, 100);
+
+          // Log if using fallback data
+          if (data.fallback) {
+            this.weatherLogger.warning('Backend returned fallback weather data');
+          } else {
+            this.weatherLogger.success('Real weather data received from backend');
+          }
+        } else {
+          throw new Error('Backend weather API returned error');
+        }
       },
       error: (error) => {
-        console.error('Weather API error:', error);
-        // Fallback to default values
-        this.temperature = '31°C';
-        this.location = 'Cebu City';
+        this.weatherLogger.error(`Backend weather API error: ${error.message}`);
+        if (error.status === 0) {
+          this.weatherLogger.logBackendNotRunning();
+        }
+        // Fallback to simulated data if backend fails
+        this.simulateWeatherData();
       }
     });
-    */
-
-    // Simulate weather data for demo
-    this.simulateWeatherData();
   }
 
   private simulateWeatherData(): void {
@@ -163,6 +205,10 @@ export class Dashboard implements OnInit, OnDestroy {
     const randomTemp = temps[Math.floor(Math.random() * temps.length)];
     this.temperature = `${randomTemp}°C`;
     this.location = 'Cebu City';
+
+    // Log fallback usage
+    this.weatherLogger.warning('Using simulated weather data as fallback');
+    this.weatherLogger.logWeatherUpdate(this.temperature, this.location + ' (simulated)');
 
     // Update DOM elements (both desktop and mobile)
     setTimeout(() => {
@@ -261,11 +307,26 @@ export class Dashboard implements OnInit, OnDestroy {
 
   // Navigation methods
   onLogout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      // Implement logout logic here
-      console.log('Logging out...');
-      // Redirect to login page or clear session
-    }
+    this.showLogoutModal = true;
+  }
+
+  // Logout modal methods
+  confirmLogout(): void {
+    // Clear authentication state
+    this.authService.logout();
+
+    // Close modal
+    this.showLogoutModal = false;
+
+    // Navigate to admin login
+    this.router.navigate(['/adminlogin']).catch(() => {
+      // Fallback navigation
+      window.location.href = '/adminlogin';
+    });
+  }
+
+  cancelLogout(): void {
+    this.showLogoutModal = false;
   }
 
   onNavigate(section: string): void {
