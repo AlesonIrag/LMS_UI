@@ -38,6 +38,7 @@
               "budgets": [
                 {
                   "type": "initial",
+<<<<<<< HEAD
                   "maximumWarning": "1MB",
                   "maximumError": "2MB"
                 },
@@ -45,6 +46,15 @@
                   "type": "anyComponentStyle",
                   "maximumWarning": "10kB",
                   "maximumError": "15kB"
+=======
+                  "maximumWarning": "2MB",
+                  "maximumError": "3MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "20kB",
+                  "maximumError": "30kB"
+>>>>>>> ed97ad38809dfe546039b4850311c5730e95a8c4
                 }
               ],
               "outputHashing": "all",
@@ -77,6 +87,16 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+<<<<<<< HEAD
+=======
+          "options": {
+            "allowedHosts": [
+              "benedictocollege-library.org",
+              "localhost",
+              "127.0.0.1"
+            ]
+          },
+>>>>>>> ed97ad38809dfe546039b4850311c5730e95a8c4
           "configurations": {
             "production": {
               "buildTarget": "Library-Management-System-AI:build:production"
@@ -119,5 +139,11 @@
         }
       }
     }
+<<<<<<< HEAD
+=======
+  },
+  "cli": {
+    "analytics": "d717f347-6d4a-4fa9-a1f8-99ceea99616f"
+>>>>>>> ed97ad38809dfe546039b4850311c5730e95a8c4
   }
 }
