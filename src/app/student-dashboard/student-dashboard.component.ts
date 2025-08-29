@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { WeatherLoggerService } from '../services/weather-logger.service';
 import { StudentAuthService } from '../services/student-auth.service';
+import { ThemeService } from '../services/theme.service';
+import { AnnouncementService, Announcement, NewsItem } from '../services/announcement.service';
 
 interface WeatherResponse {
   success: boolean;
@@ -103,12 +105,23 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   private weatherSubscription?: Subscription;
   private statsSubscription?: Subscription;
 
-  // Dark mode and mobile menu state
-  isDarkMode: boolean = false;
+  // Mobile menu state
   isMobileMenuOpen: boolean = false;
 
   // Logout modal state
   showLogoutModal: boolean = false;
+
+  // Profile modal state
+  showProfileModal: boolean = false;
+  profileModalTop: string = '70px';
+  profileModalRight: string = '20px';
+
+  @ViewChild('profileButton', { static: false }) profileButton!: ElementRef;
+
+  // Profile photo state
+  currentUserProfilePhoto: string = '';
+  currentUserInitial: string = 'S';
+  currentUserFirstName: string = 'Student';
 
   // Chat widget state
   isChatOpen: boolean = false;
@@ -118,6 +131,18 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   avatarError: boolean = false;
   hasUnreadMessages: boolean = false;
   unreadCount: number = 0;
+
+  // Sidebar visibility state - Always show right sidebar
+  isSidebarHidden: boolean = false;
+
+  // Quote of the Day properties
+  currentQuote: any = null;
+  isQuoteLoading: boolean = false;
+  quoteError: string | null = null;
+
+  // Random Fact properties
+  randomFact: string = 'Loading fact...';
+  factError: string | null = null;
 
   // Weather data
   temperature: string = '31°C';
@@ -160,51 +185,27 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   categoryFilter: string = 'all';
   statusFilter: string = 'all';
 
-  // News and announcements
-  latestNews = [
-    { text: 'Library closed on July 12.', type: 'warning', color: 'red' },
-    { text: 'New Science books available!', type: 'info', color: 'green' },
-    { text: 'Join the Reading Challenge.', type: 'event', color: 'blue' }
-  ];
-
-  announcements = [
-    {
-      text: 'Return books by July 10 to avoid fees.',
-      time: '2 hours ago',
-      icon: 'megaphone'
-    }
-  ];
+  // News and announcements - now dynamic
+  latestNews: NewsItem[] = [];
+  announcements: Announcement[] = [];
+  private announcementSubscriptions: Subscription[] = [];
 
   // Chat messages
-  chatMessages: ChatMessage[] = [
-    {
-      text: "I'm looking for books about computer science",
-      isUser: true,
-      time: "2:30 PM"
-    },
-    {
-      text: "Great! I found several computer science books. Would you like me to show you programming books, algorithms, or general computer science?",
-      isUser: false,
-      time: "2:31 PM"
-    },
-    {
-      text: "Programming books please",
-      isUser: true,
-      time: "2:32 PM"
-    },
-    {
-      text: "Perfect! Here are some popular programming books available: 'Clean Code' by Robert Martin, 'JavaScript: The Good Parts' by Douglas Crockford, and 'Python Crash Course' by Eric Matthes. Would you like me to check their availability?",
-      isUser: false,
-      time: "2:32 PM"
-    }
-  ];
+  chatMessages: ChatMessage[] = [];
 
   constructor(
     private http: HttpClient,
     private weatherLogger: WeatherLoggerService,
     private studentAuthService: StudentAuthService,
-    private router: Router
+    private router: Router,
+    private themeService: ThemeService,
+    private announcementService: AnnouncementService
   ) {}
+
+  // Getter for dark mode state from theme service
+  get isDarkMode(): boolean {
+    return this.themeService.isDarkMode;
+  }
 
   async ngOnInit(): Promise<void> {
     console.log('🎯 Student Dashboard component initialized successfully!');
@@ -216,8 +217,11 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     this.loadWeatherData();
     this.startStatsUpdates();
     this.animateCounters();
-    this.loadDarkModePreference();
+    this.loadUserProfileData();
     this.initializeStudentData();
+    this.loadQuoteOfTheDay();
+    this.loadRandomFact();
+    this.loadAnnouncements();
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
@@ -229,11 +233,17 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     this.statsSubscription = interval(30000).subscribe(() => {
       this.updateStats();
     });
+
+    // Listen for window focus to refresh profile data when user returns
+    window.addEventListener('focus', () => {
+      this.refreshProfileData();
+    });
   }
 
   ngOnDestroy(): void {
     this.weatherSubscription?.unsubscribe();
     this.statsSubscription?.unsubscribe();
+    this.announcementSubscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private loadWeatherData(): void {
@@ -310,8 +320,17 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   }
 
   private updateWeatherIcon(condition: string): void {
+    // Update DOM elements with the correct SVG paths
+    setTimeout(() => {
+      this.updateWeatherIconPaths(condition);
+    }, 100);
+  }
+
+  private updateWeatherIconPaths(condition: string): void {
     const iconElement = document.getElementById('weather-icon');
-    if (!iconElement) return;
+    const iconElementMobile = document.getElementById('weather-icon-mobile');
+    
+    if (!iconElement && !iconElementMobile) return;
 
     let iconPath = '';
     switch (condition.toLowerCase()) {
@@ -328,7 +347,13 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
     }
 
-    iconElement.innerHTML = `<path d="${iconPath}"/>`;
+    if (iconElement) {
+      iconElement.innerHTML = `<path d="${iconPath}"/>`;
+    }
+    
+    if (iconElementMobile) {
+      iconElementMobile.innerHTML = `<path d="${iconPath}"/>`;
+    }
   }
 
   private startStatsUpdates(): void {
@@ -422,6 +447,10 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   onNavigate(section: string): void {
     console.log(`Student navigating to ${section}`);
+
+    // Keep sidebar always visible - removed dynamic hiding behavior
+    // this.isSidebarHidden = section !== 'dashboard';
+
     this.currentView = section;
     this.currentPage = 1; // Reset pagination when switching views
   }
@@ -490,9 +519,165 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     // Implement notification panel toggle
   }
 
-  onProfileClick(): void {
-    console.log('Student profile clicked');
-    // Implement profile menu toggle
+  onProfileClick(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    console.log('Student profile clicked - showProfileModal before:', this.showProfileModal);
+    this.showProfileModal = !this.showProfileModal;
+    if (this.showProfileModal) {
+      this.calculateModalPosition();
+    }
+    console.log('Student profile clicked - showProfileModal after:', this.showProfileModal);
+  }
+
+  private calculateModalPosition(): void {
+    if (this.profileButton && this.profileButton.nativeElement) {
+      const buttonRect = this.profileButton.nativeElement.getBoundingClientRect();
+      const modalWidth = 192; // 48 * 4 = 192px (w-48 in Tailwind)
+
+      // Position the modal below the button and aligned to its right edge
+      this.profileModalTop = `${buttonRect.bottom + 8}px`; // 8px margin below button
+      this.profileModalRight = `${window.innerWidth - buttonRect.right}px`; // Align to right edge of button
+
+      console.log('Student modal position calculated:', {
+        top: this.profileModalTop,
+        right: this.profileModalRight,
+        buttonRect: buttonRect
+      });
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: any): void {
+    if (this.showProfileModal) {
+      this.calculateModalPosition();
+    }
+  }
+
+  // Profile modal methods
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+  }
+
+  viewProfile(): void {
+    this.showProfileModal = false;
+    // Navigate to student profile page
+    this.router.navigate(['/student-profile']);
+  }
+
+  // Profile photo methods
+  loadUserProfileData(): void {
+    console.log('🚀 loadUserProfileData() called');
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    console.log('🔍 Current student from auth service:', currentStudent);
+
+    if (currentStudent) {
+      console.log('✅ Current student exists, calling getDetailedProfile()');
+      // Get detailed profile to access profile photo
+      this.studentAuthService.getDetailedProfile().subscribe({
+        next: (detailedStudent) => {
+          console.log('🔍 Detailed student profile received:', detailedStudent);
+          console.log('🔍 Raw profilePhoto value:', detailedStudent?.profilePhoto);
+          console.log('🔍 ProfilePhoto type:', typeof detailedStudent?.profilePhoto);
+          console.log('🔍 ProfilePhoto === null:', detailedStudent?.profilePhoto === null);
+          console.log('🔍 ProfilePhoto === undefined:', detailedStudent?.profilePhoto === undefined);
+          console.log('🔍 ProfilePhoto === "":', detailedStudent?.profilePhoto === '');
+
+          if (detailedStudent) {
+            // Set profile photo if available, otherwise use default
+            this.currentUserProfilePhoto = detailedStudent.profilePhoto || '';
+
+            // Set user first name and initial
+            const firstName = detailedStudent.firstName || currentStudent.fullName?.split(' ')[0] || 'Student';
+            this.currentUserFirstName = firstName;
+            this.currentUserInitial = firstName.charAt(0).toUpperCase();
+
+            console.log('👤 Student profile data loaded:', {
+              profilePhoto: this.currentUserProfilePhoto,
+              profilePhotoExists: !!detailedStudent.profilePhoto,
+              profilePhotoValue: detailedStudent.profilePhoto,
+              initial: this.currentUserInitial,
+              firstName: this.currentUserFirstName,
+              fullName: currentStudent.fullName,
+              detailedFirstName: detailedStudent.firstName
+            });
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error loading detailed profile:', error);
+          // Fallback to basic student data
+          const firstName = currentStudent.fullName?.split(' ')[0] || 'Student';
+          this.currentUserFirstName = firstName;
+          this.currentUserInitial = firstName.charAt(0).toUpperCase();
+          console.log('🔄 Fallback: Using initial from basic student data:', this.currentUserInitial);
+        }
+      });
+    } else {
+      console.log('❌ No current student found');
+    }
+  }
+
+  hasValidProfilePhoto(): boolean {
+    const photoUrl = this.currentUserProfilePhoto;
+    return Boolean(photoUrl &&
+                   photoUrl.trim() !== '' &&
+                   !photoUrl.includes('data:image/svg+xml') && // Not the default SVG
+                   (photoUrl.startsWith('http://') || photoUrl.startsWith('https://') || photoUrl.startsWith('/')));
+  }
+
+  getProfileImageSrc(): string {
+    // Return uploaded photo if available and valid, otherwise return default SVG
+    if (this.hasValidProfilePhoto()) {
+      let imageUrl = this.currentUserProfilePhoto;
+
+      // Convert relative URLs to full backend URLs
+      if (imageUrl.startsWith('/api/')) {
+        imageUrl = `http://localhost:3000${imageUrl}`;
+      }
+
+      return imageUrl;
+    }
+
+    console.log('🔤 Using default SVG with initial:', this.currentUserInitial);
+    // Generate default SVG with user's initial
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%233B82F6'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-family='Arial' font-size='14' font-weight='bold'%3E${this.currentUserInitial}%3C/text%3E%3C/svg%3E`;
+  }
+
+  onImageError(event: any): void {
+    console.warn('Profile image failed to load, falling back to default');
+
+    // Try loading with a different approach if it's a localhost URL
+    const originalSrc = event.target.src;
+    if (originalSrc.startsWith('http://localhost:3000/')) {
+      const relativePath = originalSrc.replace('http://localhost:3000/', '/');
+      event.target.src = relativePath;
+      return;
+    }
+
+    // Reset to empty to trigger default SVG generation
+    this.currentUserProfilePhoto = '';
+    event.target.src = this.getProfileImageSrc();
+  }
+
+  onImageLoad(event: any): void {
+    console.log('✅ Profile image loaded successfully:', event.target.src);
+  }
+
+  // Method to refresh profile data (can be called when returning from profile page)
+  refreshProfileData(): void {
+    console.log('🔄 Manually refreshing profile data...');
+    this.loadUserProfileData();
+  }
+
+  // Method to force refresh profile data (for testing)
+  forceRefreshProfile(): void {
+    console.log('🔄 Force refreshing profile data...');
+    // Clear current data first
+    this.currentUserProfilePhoto = '';
+    this.currentUserInitial = 'S';
+    // Then reload
+    this.loadUserProfileData();
   }
 
   // Utility methods for template
@@ -506,46 +691,13 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Demo method to add new announcements
-  addAnnouncement(text: string): void {
-    const newAnnouncement = {
-      text: text,
-      time: 'Just now',
-      icon: 'megaphone'
-    };
 
-    this.announcements.unshift(newAnnouncement);
-
-    // Remove old announcements if more than 5
-    if (this.announcements.length > 5) {
-      this.announcements = this.announcements.slice(0, 5);
-    }
-  }
-
-  // Demo method to update news
-  addNews(text: string, type: string = 'info', color: string = 'blue'): void {
-    const newNews = { text, type, color };
-    this.latestNews.unshift(newNews);
-
-    // Keep only latest 5 news items
-    if (this.latestNews.length > 5) {
-      this.latestNews = this.latestNews.slice(0, 5);
-    }
-  }
 
   // Dark mode methods
   toggleDarkMode(): void {
-    this.isDarkMode = !this.isDarkMode;
-    this.saveDarkModePreference();
-  }
-
-  private loadDarkModePreference(): void {
-    const savedPreference = localStorage.getItem('darkMode');
-    this.isDarkMode = savedPreference === 'true';
-  }
-
-  private saveDarkModePreference(): void {
-    localStorage.setItem('darkMode', this.isDarkMode.toString());
+    this.themeService.toggleDarkMode();
+    // Refresh the page to ensure all components update properly
+    window.location.reload();
   }
 
   // Mobile menu methods
@@ -1099,4 +1251,159 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     ];
   }
 
+  // Date methods
+  getCurrentDate(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // Quote of the Day methods
+  private loadQuoteOfTheDay(): void {
+    console.log('🎯 === LOADING STUDENT QUOTE OF THE DAY ===');
+    this.isQuoteLoading = true;
+    this.quoteError = null;
+
+    // Fetch quote with student-specific categories
+    this.fetchStudentQuote().subscribe({
+      next: (response: any) => {
+        console.log('🔍 Student quote response:', response);
+        if (response && (response.quote || response.text)) {
+          this.currentQuote = {
+            text: response.quote || response.text || 'No quote available',
+            author: response.author || 'Unknown Author'
+          };
+          this.quoteError = null;
+          console.log('✅ Student quote loaded successfully:', this.currentQuote);
+        } else {
+          this.quoteError = 'Failed to load quote';
+          console.log('❌ Student quote loading failed:', this.quoteError);
+        }
+        this.isQuoteLoading = false;
+      },
+      error: (error: any) => {
+        console.error('❌ Error loading student quote:', error);
+        this.quoteError = 'Failed to load quote of the day';
+        this.isQuoteLoading = false;
+        
+        // Fallback quote for students
+        this.currentQuote = {
+          text: "The only way to do great work is to love what you do.",
+          author: "Steve Jobs"
+        };
+      }
+    });
+  }
+
+  private fetchStudentQuote() {
+    // Student-specific categories: motivation, student, education, inspiration
+    const categories = ['motivation', 'student', 'education', 'inspiration'];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    
+    const url = `https://benedictocollege-quote-api.netlify.app/.netlify/functions/random?category=${randomCategory}`;
+    
+    console.log('🌐 Making student quote API request to:', url);
+    return this.http.get(url);
+  }
+
+  private loadRandomFact(): void {
+    this.http.get<any>('https://uselessfacts.jsph.pl/api/v2/facts/random').subscribe({
+      next: (data) => {
+        this.randomFact = data.text;
+      },
+      error: (error) => {
+        this.factError = 'Failed to load a fact. Please try again later.';
+        this.randomFact = 'Could not fetch a fact at this time.';
+        console.error('Error fetching random fact:', error);
+      }
+    });
+  }
+
+  // Greeting methods
+  getGreeting(): string {
+    const firstName = this.currentUserFirstName;
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Good Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Good Afternoon';
+    } else {
+      timeGreeting = 'Good Evening';
+    }
+
+    return `${timeGreeting}, ${firstName}!`;
+  }
+
+  getMobileGreeting(): string {
+    const firstName = this.currentUserFirstName;
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Afternoon';
+    } else {
+      timeGreeting = 'Evening';
+    }
+
+    return `Good ${timeGreeting}, ${firstName}!`;
+  }
+
+  // Announcement loading methods
+  private loadAnnouncements(): void {
+    // Load announcements for students
+    const announcementSub = this.announcementService.getAnnouncementsByAudience('students').subscribe(announcements => {
+      this.announcements = announcements;
+    });
+    this.announcementSubscriptions.push(announcementSub);
+
+    // Load news items
+    const newsSub = this.announcementService.getActiveNews().subscribe(news => {
+      this.latestNews = news;
+    });
+    this.announcementSubscriptions.push(newsSub);
+  }
+
+  // Utility methods for announcements
+  getTimeAgo(dateString: string): string {
+    return this.announcementService.getTimeAgo(dateString);
+  }
+
+  getTypeIcon(type: string): string {
+    switch (type) {
+      case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
+      case 'success': return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'error': return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+      default: return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    }
+  }
+
+  getTypeColor(type: string): string {
+    switch (type) {
+      case 'warning': return 'text-yellow-500';
+      case 'success': return 'text-green-500';
+      case 'error': return 'text-red-500';
+      default: return 'text-blue-500';
+    }
+  }
+
+  getNewsColor(color: string): string {
+    switch (color) {
+      case 'red': return 'bg-red-500';
+      case 'green': return 'bg-green-500';
+      case 'blue': return 'bg-blue-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'purple': return 'bg-purple-500';
+      default: return 'bg-blue-500';
+    }
+  }
 }

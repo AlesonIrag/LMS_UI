@@ -14,6 +14,25 @@ interface Student {
   status: string;
 }
 
+export interface DetailedStudent {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  middleInitial: string;
+  suffix: string;
+  fullName: string;
+  course: string;
+  yearLevel: string;
+  section: string;
+  email: string;
+  phoneNumber?: string;
+  profilePhoto?: string;
+  enrollmentStatus: string;
+  accountStatus: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -384,6 +403,160 @@ export class StudentAuthService {
     ];
 
     return studentPermissions.includes(permission);
+  }
+
+  /**
+   * Get detailed student profile information
+   */
+  getDetailedProfile(): Observable<DetailedStudent | null> {
+    const currentStudent = this.getCurrentStudent();
+    if (!currentStudent) {
+      return of(null);
+    }
+
+    // Call the backend API to get detailed student information
+    return this.apiService.get(`/auth/get-student/${currentStudent.studentId}`).pipe(
+      map((response: any) => {
+        console.log('🔍 Raw API response for getDetailedProfile:', response);
+
+        if (response && response.success && response.data) {
+          const data = response.data;
+          console.log('🔍 Raw data.ProfilePhoto:', data.ProfilePhoto);
+          console.log('🔍 ProfilePhoto type:', typeof data.ProfilePhoto);
+
+          const detailedStudent = {
+            studentId: data.StudentID,
+            firstName: data.FirstName,
+            lastName: data.LastName,
+            middleInitial: data.MiddleInitial || '',
+            suffix: data.Suffix || '',
+            fullName: data.fullName || `${data.FirstName} ${data.LastName}`.trim(),
+            course: data.Course,
+            yearLevel: data.YearLevel,
+            section: data.Section,
+            email: data.Email,
+            phoneNumber: data.PhoneNumber || '',
+            profilePhoto: data.ProfilePhoto || null,
+            enrollmentStatus: data.EnrollmentStatus,
+            accountStatus: data.AccountStatus,
+            createdAt: data.CreatedAt,
+            updatedAt: data.UpdatedAt
+          } as DetailedStudent;
+
+          console.log('🔍 Processed detailedStudent.profilePhoto:', detailedStudent.profilePhoto);
+          return detailedStudent;
+        }
+        return null;
+      }),
+      catchError((error) => {
+        console.error('Error fetching detailed student profile:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Update detailed student profile
+   */
+  updateDetailedProfile(updates: Partial<DetailedStudent>): Observable<boolean> {
+    const currentStudent = this.getCurrentStudent();
+    if (!currentStudent) {
+      return of(false);
+    }
+
+    // Prepare the update data for the backend API
+    const updateData = {
+      firstName: updates.firstName,
+      lastName: updates.lastName,
+      middleInitial: updates.middleInitial,
+      suffix: updates.suffix,
+      course: updates.course,
+      yearLevel: updates.yearLevel,
+      section: updates.section,
+      email: updates.email,
+      phoneNumber: updates.phoneNumber
+    };
+
+    // Call the backend API to update student information
+    return this.apiService.put(`/auth/update-student/${currentStudent.studentId}`, updateData).pipe(
+      map((response: any) => {
+        if (response && response.success) {
+          // Update the current student data in localStorage
+          const updatedStudent = {
+            ...currentStudent,
+            fullName: `${updates.firstName} ${updates.lastName}`.trim(),
+            email: updates.email || currentStudent.email,
+            phoneNumber: updates.phoneNumber || currentStudent.phoneNumber,
+            course: updates.course || currentStudent.course,
+            yearLevel: updates.yearLevel || currentStudent.yearLevel,
+            section: updates.section || currentStudent.section
+          };
+
+          localStorage.setItem('currentStudent', JSON.stringify(updatedStudent));
+          this.currentStudentSubject.next(updatedStudent);
+
+          console.log('✅ Student profile updated successfully:', updatedStudent);
+          return true;
+        }
+        return false;
+      }),
+      catchError((error) => {
+        console.error('Error updating student profile:', error);
+        return of(false);
+      })
+    );
+  }
+
+  /**
+   * Upload student profile photo
+   */
+  uploadProfilePhoto(file: File): Observable<string | null> {
+    const currentStudent = this.getCurrentStudent();
+    if (!currentStudent) {
+      throw new Error('No student logged in');
+    }
+
+    return this.apiService.uploadProfilePhoto(currentStudent.studentId, file).pipe(
+      map((response: any) => {
+        console.log('Upload response:', response); // Debug log
+        if (response && response.success && response.data && response.data.imageUrl) {
+          const imageUrl = response.data.imageUrl;
+          console.log('✅ Profile photo uploaded successfully:', imageUrl);
+          return imageUrl;
+        } else {
+          console.error('Upload failed - invalid response:', response);
+          throw new Error(response?.error || 'Failed to upload profile photo');
+        }
+      }),
+      catchError((error) => {
+        console.error('Error uploading profile photo:', error);
+        throw error; // Re-throw the error instead of returning null
+      })
+    );
+  }
+
+  /**
+   * Delete student profile photo
+   */
+  deleteProfilePhoto(): Observable<boolean> {
+    const currentStudent = this.getCurrentStudent();
+    if (!currentStudent) {
+      return of(false);
+    }
+
+    return this.apiService.deleteProfilePhoto(currentStudent.studentId).pipe(
+      map((response: any) => {
+        if (response && response.success) {
+          console.log('✅ Profile photo deleted successfully');
+          return true;
+        }
+        return false;
+      }),
+      catchError((error) => {
+        console.error('Error deleting profile photo:', error);
+        return of(false);
+      })
+    );
   }
 
   /**

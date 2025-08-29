@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { WeatherLoggerService } from '../services/weather-logger.service';
 import { AuthService } from '../services/auth.service';
+import { ThemeService } from '../services/theme.service';
+import { QuoteService, Quote } from '../services/quote.service';
 
 interface WeatherResponse {
   success: boolean;
@@ -38,6 +40,7 @@ interface ChatMessage {
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   imports: [RouterModule, CommonModule, HttpClientModule, FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
@@ -48,12 +51,34 @@ export class Dashboard implements OnInit, OnDestroy {
   private weatherSubscription?: Subscription;
   private statsSubscription?: Subscription;
 
-  // Dark mode and mobile menu state
-  isDarkMode: boolean = false;
+  // Mobile menu state
   isMobileMenuOpen: boolean = false;
+
+  // Navigation collapse state
+  isLibraryManagementCollapsed: boolean = false;
+  isUserManagementCollapsed: boolean = false;
+  isSystemAdminCollapsed: boolean = false;
+  isReportsCollapsed: boolean = false;
+
+  // Sidebar visibility state
+  isSidebarHidden: boolean = false;
+
+  // Active section tracking
+  activeSection: string = 'overview';
 
   // Logout modal state
   showLogoutModal: boolean = false;
+
+  // Profile modal state
+  showProfileModal: boolean = false;
+  profileModalTop: string = '70px';
+  profileModalRight: string = '280px';
+
+  @ViewChild('profileButton', { static: false }) profileButton!: ElementRef;
+
+  // User profile data
+  currentUserProfilePhoto: string = '';
+  currentUserInitial: string = 'A';
 
   // Chat widget state
   isChatOpen: boolean = false;
@@ -92,39 +117,49 @@ export class Dashboard implements OnInit, OnDestroy {
   ];
 
   // Chat messages
-  chatMessages: ChatMessage[] = [
-    {
-      text: "I'm looking for books about computer science",
-      isUser: true,
-      time: "2:30 PM"
-    },
-    {
-      text: "Great! I found several computer science books. Would you like me to show you programming books, algorithms, or general computer science?",
-      isUser: false,
-      time: "2:31 PM"
-    },
-    {
-      text: "Programming books please",
-      isUser: true,
-      time: "2:32 PM"
-    },
-    {
-      text: "Perfect! Here are some popular programming books available: 'Clean Code' by Robert Martin, 'JavaScript: The Good Parts' by Douglas Crockford, and 'Python Crash Course' by Eric Matthes. Would you like me to check their availability?",
-      isUser: false,
-      time: "2:32 PM"
-    }
-  ];
+  chatMessages: ChatMessage[] = [];
+
+  // Quote of the Day properties
+  currentQuote: Quote | null = null;
+  isQuoteLoading: boolean = false;
+  quoteError: string | null = null;
+  private quoteSubscription?: Subscription;
+
+  // Random Fact properties
+  currentFact: any = null;
+  isFactLoading: boolean = false;
+  factError: string | null = null;
 
   constructor(
     private http: HttpClient,
     private weatherLogger: WeatherLoggerService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private themeService: ThemeService,
+    private quoteService: QuoteService
   ) {}
+
+  // Getter for dark mode state from theme service
+  get isDarkMode(): boolean {
+    return this.themeService.isDarkMode;
+  }
 
   async ngOnInit(): Promise<void> {
     console.log('🎯 Dashboard component initialized successfully!');
     console.log('📊 Loading dashboard data...');
+
+    // Check current route and redirect to overview if no specific child route
+    const currentUrl = this.router.url;
+    if (currentUrl === '/dashboard') {
+      this.router.navigate(['/dashboard/overview']);
+      return;
+    }
+
+    // Initialize sidebar visibility based on current route
+    this.initializeSidebarVisibility();
+
+    // Load user profile data
+    this.loadUserProfileData();
 
     // Perform startup tests and logging
     await this.weatherLogger.performStartupTests();
@@ -132,7 +167,12 @@ export class Dashboard implements OnInit, OnDestroy {
     this.loadWeatherData();
     this.startStatsUpdates();
     this.animateCounters();
-    this.loadDarkModePreference();
+    
+    // Load quote of the day (will use cache if available)
+    this.loadQuoteOfTheDay();
+    
+    // Load random fact
+    this.loadRandomFact();
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
@@ -146,9 +186,49 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   }
 
+  private initializeSidebarVisibility(): void {
+    // Set sidebar visibility based on current route
+    const currentUrl = this.router.url;
+    console.log('Initializing sidebar visibility for URL:', currentUrl);
+    
+    // Show sidebar only for overview page, hide for all other pages
+    this.isSidebarHidden = !currentUrl.includes('/dashboard/overview');
+    
+    // Set active section based on current route
+    if (currentUrl.includes('/dashboard/books')) {
+      this.activeSection = 'books';
+    } else if (currentUrl.includes('/dashboard/cataloging')) {
+      this.activeSection = 'cataloging';
+    } else if (currentUrl.includes('/dashboard/students')) {
+      this.activeSection = 'students';
+    } else if (currentUrl.includes('/dashboard/admins')) {
+      this.activeSection = 'admins';
+    } else if (currentUrl.includes('/dashboard/reports')) {
+      this.activeSection = 'reports';
+    } else if (currentUrl.includes('/dashboard/borrowing')) {
+      this.activeSection = 'borrowing';
+    } else if (currentUrl.includes('/dashboard/reservations')) {
+      this.activeSection = 'reservations';
+    } else if (currentUrl.includes('/dashboard/faculty')) {
+      this.activeSection = 'faculty';
+    } else if (currentUrl.includes('/dashboard/system-settings')) {
+      this.activeSection = 'system-settings';
+    } else if (currentUrl.includes('/dashboard/logs')) {
+      this.activeSection = 'logs';
+    } else if (currentUrl.includes('/dashboard/profile')) {
+      this.activeSection = 'profile';
+    } else {
+      this.activeSection = 'overview';
+    }
+    
+    console.log('Sidebar hidden:', this.isSidebarHidden);
+    console.log('Active section:', this.activeSection);
+  }
+
   ngOnDestroy(): void {
     this.weatherSubscription?.unsubscribe();
     this.statsSubscription?.unsubscribe();
+    this.quoteSubscription?.unsubscribe();
   }
 
   private loadWeatherData(): void {
@@ -331,8 +411,19 @@ export class Dashboard implements OnInit, OnDestroy {
 
   onNavigate(section: string): void {
     console.log(`Navigating to ${section}`);
-    // Implement navigation logic here
-    // You can use Angular Router to navigate to different sections
+
+    // Hide sidebar for content pages, show for overview
+    this.isSidebarHidden = section !== 'overview';
+
+    // Update active section
+    this.activeSection = section;
+
+    this.router.navigate(['/dashboard', section]);
+  }
+
+  // Check if a specific section is currently active
+  isSectionActive(section: string): boolean {
+    return this.activeSection === section;
   }
 
   // Notification methods
@@ -343,7 +434,46 @@ export class Dashboard implements OnInit, OnDestroy {
 
   onProfileClick(): void {
     console.log('Profile clicked');
-    // Implement profile menu toggle
+    this.showProfileModal = !this.showProfileModal;
+
+    if (this.showProfileModal && this.profileButton) {
+      this.calculateModalPosition();
+    }
+  }
+
+  private calculateModalPosition(): void {
+    if (this.profileButton && this.profileButton.nativeElement) {
+      const buttonRect = this.profileButton.nativeElement.getBoundingClientRect();
+      const modalWidth = 192; // 48 * 4 = 192px (w-48 in Tailwind)
+
+      // Position the modal below the button and aligned to its right edge
+      this.profileModalTop = `${buttonRect.bottom + 8}px`; // 8px margin below button
+      this.profileModalRight = `${window.innerWidth - buttonRect.right}px`; // Align to right edge of button
+
+      console.log('Modal position calculated:', {
+        top: this.profileModalTop,
+        right: this.profileModalRight,
+        buttonRect: buttonRect
+      });
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: any): void {
+    if (this.showProfileModal) {
+      this.calculateModalPosition();
+    }
+  }
+
+  // Profile modal methods
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+  }
+
+  viewProfile(): void {
+    this.showProfileModal = false;
+    // Navigate to standalone profile page (outside dashboard layout)
+    this.router.navigate(['/profile']);
   }
 
   // Utility methods for template
@@ -386,17 +516,9 @@ export class Dashboard implements OnInit, OnDestroy {
 
   // Dark mode methods
   toggleDarkMode(): void {
-    this.isDarkMode = !this.isDarkMode;
-    this.saveDarkModePreference();
-  }
-
-  private loadDarkModePreference(): void {
-    const savedPreference = localStorage.getItem('darkMode');
-    this.isDarkMode = savedPreference === 'true';
-  }
-
-  private saveDarkModePreference(): void {
-    localStorage.setItem('darkMode', this.isDarkMode.toString());
+    this.themeService.toggleDarkMode();
+    // Navigate to overview for proper theme refresh
+    this.router.navigate(['/dashboard/overview']);
   }
 
   // Mobile menu methods
@@ -411,29 +533,28 @@ export class Dashboard implements OnInit, OnDestroy {
   // CSS class helpers
   getAsideClasses(): string {
     const baseClasses = 'lg:translate-x-0';
-    const darkClasses = this.isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
+    const darkClasses = this.themeService.getAsideClasses();
     return `${baseClasses} ${darkClasses}`;
   }
 
   getMainContentClasses(): string {
-    return this.isDarkMode ? 'bg-gray-900' : 'bg-gray-50';
+    return this.themeService.getMainContentClasses();
   }
 
   getCardClasses(): string {
-    return this.isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
+    return this.themeService.getCardClasses();
   }
 
   getTextClasses(): string {
-    return this.isDarkMode ? 'text-white' : 'text-gray-900';
+    return this.themeService.getTextClasses();
   }
 
   getSecondaryTextClasses(): string {
-    return this.isDarkMode ? 'text-gray-300' : 'text-gray-700';
+    return this.themeService.getSecondaryTextClasses();
   }
 
   getHeaderClasses(): string {
-    const darkClasses = this.isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
-    return `shadow-sm border-b px-6 py-4 ${darkClasses}`;
+    return this.themeService.getHeaderClasses();
   }
 
   // Chat widget methods
@@ -561,5 +682,338 @@ export class Dashboard implements OnInit, OnDestroy {
     this.avatarError = true;
     // Hide the broken image
     event.target.style.display = 'none';
+  }
+
+  // Greeting and user info methods
+  getGreeting(): string {
+    const currentAdmin = this.authService.getCurrentAdmin();
+    const firstName = currentAdmin?.fullName?.split(' ')[0] || 'Admin';
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Good Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Good Afternoon';
+    } else {
+      timeGreeting = 'Good Evening';
+    }
+
+    return `${timeGreeting}, ${firstName}!`;
+  }
+
+  getMobileGreeting(): string {
+    const currentAdmin = this.authService.getCurrentAdmin();
+    const firstName = currentAdmin?.fullName?.split(' ')[0] || 'Admin';
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Afternoon';
+    } else {
+      timeGreeting = 'Evening';
+    }
+
+    return `Good ${timeGreeting}, ${firstName}!`;
+  }
+
+  getCurrentAdmin() {
+    return this.authService.getCurrentAdmin();
+  }
+
+  loadUserProfileData(): void {
+    console.log('🚀 Dashboard: Loading fresh user profile data...');
+
+    // First, get basic info from cached admin data for immediate display
+    const currentAdmin = this.authService.getCurrentAdmin();
+    if (currentAdmin) {
+      const firstName = currentAdmin.fullName?.split(' ')[0] || 'Admin';
+      this.currentUserInitial = firstName.charAt(0).toUpperCase();
+
+      console.log('👤 Dashboard: Basic admin info loaded from cache:', {
+        fullName: currentAdmin.fullName,
+        initial: this.currentUserInitial
+      });
+    }
+
+    // Then fetch fresh profile data from backend to get latest profile photo
+    this.authService.getProfileDetails().subscribe({
+      next: (admin) => {
+        if (admin) {
+          console.log('✅ Dashboard: Fresh profile data received:', admin);
+
+          // Update profile photo with fresh data
+          this.currentUserProfilePhoto = admin.profilePhoto || '';
+
+          // Update user initial in case name changed
+          const firstName = admin.fullName?.split(' ')[0] || 'Admin';
+          this.currentUserInitial = firstName.charAt(0).toUpperCase();
+
+          console.log('📸 Dashboard: Profile photo updated:', {
+            profilePhoto: this.currentUserProfilePhoto,
+            initial: this.currentUserInitial,
+            fullName: admin.fullName
+          });
+        }
+      },
+      error: (error) => {
+        console.error('❌ Dashboard: Error loading fresh profile data:', error);
+        // Fallback to cached data if fresh fetch fails
+        if (currentAdmin) {
+          this.currentUserProfilePhoto = currentAdmin.profilePhoto || '';
+        }
+      }
+    });
+
+    // Subscribe to admin updates to refresh profile data when changed
+    this.authService.currentAdmin$.subscribe(admin => {
+      if (admin) {
+        this.currentUserProfilePhoto = admin.profilePhoto || '';
+        const firstName = admin.fullName?.split(' ')[0] || 'Admin';
+        this.currentUserInitial = firstName.charAt(0).toUpperCase();
+
+        console.log('🔄 Dashboard: Admin profile updated via observable:', {
+          profilePhoto: this.currentUserProfilePhoto,
+          initial: this.currentUserInitial,
+          fullName: admin.fullName
+        });
+      }
+    });
+  }
+
+  hasValidProfilePhoto(): boolean {
+    return !!(this.currentUserProfilePhoto &&
+              this.currentUserProfilePhoto.trim() !== '' &&
+              !this.currentUserProfilePhoto.startsWith('data:image/svg+xml'));
+  }
+
+  getProfileImageSrc(): string {
+    console.log('🖼️ Dashboard getProfileImageSrc called:', {
+      currentUserProfilePhoto: this.currentUserProfilePhoto,
+      hasValidPhoto: this.hasValidProfilePhoto()
+    });
+
+    // Return uploaded photo if available and valid, otherwise return default SVG
+    if (this.hasValidProfilePhoto()) {
+      let imageUrl = this.currentUserProfilePhoto;
+
+      // Convert relative URLs to full backend URLs
+      if (imageUrl.startsWith('/api/')) {
+        imageUrl = `http://localhost:3000${imageUrl}`;
+      }
+
+      console.log('🖼️ Dashboard returning uploaded photo:', imageUrl);
+      return imageUrl;
+    }
+
+    // Generate default SVG with user's initial
+    const defaultSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%233B82F6'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-family='Arial' font-size='14' font-weight='bold'%3E${this.currentUserInitial}%3C/text%3E%3C/svg%3E`;
+    console.log('🖼️ Dashboard returning default SVG for initial:', this.currentUserInitial);
+    return defaultSvg;
+  }
+
+  onImageError(event: any): void {
+    console.warn('Profile image failed to load, falling back to default');
+    // Reset to empty to trigger default SVG generation
+    this.currentUserProfilePhoto = '';
+    event.target.src = this.getProfileImageSrc();
+  }
+
+  getCurrentDate(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  getMobileDate(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  isSuperAdmin(): boolean {
+    return this.authService.hasRole('Super Admin');
+  }
+
+  // Navigation collapse toggle methods
+  toggleLibraryManagement(): void {
+    this.isLibraryManagementCollapsed = !this.isLibraryManagementCollapsed;
+  }
+
+  toggleUserManagement(): void {
+    this.isUserManagementCollapsed = !this.isUserManagementCollapsed;
+  }
+
+  toggleSystemAdmin(): void {
+    this.isSystemAdminCollapsed = !this.isSystemAdminCollapsed;
+  }
+
+  toggleReports(): void {
+    this.isReportsCollapsed = !this.isReportsCollapsed;
+  }
+
+  // Quote of the Day methods
+  private loadQuoteOfTheDay(): void {
+    console.log('🎯 === LOADING QUOTE OF THE DAY ===');
+    this.isQuoteLoading = true;
+    this.quoteError = null;
+
+    const userRole = this.quoteService.detectUserRole();
+    console.log('🎯 Loading quote for detected role:', userRole);
+    console.log('🔍 Available categories for role:', this.quoteService.getCategoriesForRole(userRole));
+
+    // Let the QuoteService handle caching - it will return cached quote if available
+    this.quoteSubscription = this.quoteService.getQuoteOfTheDay(userRole).subscribe({
+      next: (response) => {
+        console.log('🔍 Quote service response:', response);
+        if (response.success && response.quote) {
+          this.currentQuote = response.quote;
+          this.quoteError = null;
+          console.log('✅ Quote loaded successfully:', this.currentQuote);
+          console.log('👤 Author:', this.currentQuote.author);
+          console.log('📝 Text:', this.currentQuote.text);
+          console.log('🏷️ Category:', this.currentQuote.category);
+        } else {
+          this.quoteError = response.message || 'Failed to load quote';
+          console.log('❌ Quote loading failed:', this.quoteError);
+        }
+        this.isQuoteLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error loading quote:', error);
+        this.quoteError = 'Failed to load quote of the day';
+        this.isQuoteLoading = false;
+      }
+    });
+  }
+
+  refreshQuote(): void {
+    console.log('🔄 Refreshing quote of the day...');
+    this.isQuoteLoading = true;
+    this.quoteError = null;
+
+    const userRole = this.quoteService.detectUserRole();
+    console.log('🎯 Refreshing quote for role:', userRole);
+    
+    this.quoteSubscription?.unsubscribe();
+    this.quoteSubscription = this.quoteService.refreshQuote(userRole).subscribe({
+      next: (response) => {
+        console.log('🔍 Refresh response:', response);
+        if (response.success && response.quote) {
+          this.currentQuote = response.quote;
+          this.quoteError = null;
+          console.log('✅ Quote refreshed successfully:', this.currentQuote);
+        } else {
+          this.quoteError = response.message || 'Failed to refresh quote';
+          console.log('❌ Quote refresh failed:', this.quoteError);
+        }
+        this.isQuoteLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error refreshing quote:', error);
+        this.quoteError = 'Failed to refresh quote';
+        this.isQuoteLoading = false;
+      }
+    });
+  }
+
+  // Force immediate quote update for testing
+  forceQuoteUpdate(): void {
+    console.log('🚀 FORCING QUOTE UPDATE FROM DASHBOARD');
+    this.isQuoteLoading = true;
+    this.quoteError = null;
+
+    const userRole = this.quoteService.detectUserRole();
+    console.log('🎯 Detected role for force update:', userRole);
+
+    this.quoteSubscription?.unsubscribe();
+    this.quoteSubscription = this.quoteService.forceImmediateUpdate(userRole).subscribe({
+      next: (response) => {
+        console.log('✅ Force update response:', response);
+        if (response.success && response.quote) {
+          this.currentQuote = response.quote;
+          this.quoteError = null;
+          console.log('✅ Quote force updated successfully:', this.currentQuote);
+        } else {
+          this.quoteError = response.message || 'Failed to force update quote';
+          console.log('❌ Quote force update failed:', this.quoteError);
+        }
+        this.isQuoteLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error in force update:', error);
+        this.quoteError = 'Failed to force update quote';
+        this.isQuoteLoading = false;
+      }
+    });
+  }
+
+  // Test API directly
+  testApiDirectly(): void {
+    console.log('🧪 TESTING API DIRECTLY FROM DASHBOARD');
+    this.quoteService.testApiDirectly().subscribe({
+      next: (response) => {
+        console.log('🔍 Direct API test result:', response);
+        if (response && response.quote) {
+          console.log('✅ API is working! Quote:', response.quote);
+          console.log('👤 Author:', response.author);
+          console.log('🏷️ Category:', response.category);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Direct API test error:', error);
+      }
+    });
+  }
+
+  // Clear cache and reload quote
+  clearCacheAndReload(): void {
+    console.log('🗑️ CLEARING CACHE AND RELOADING QUOTE');
+    localStorage.removeItem('quote_of_the_day');
+    localStorage.removeItem('quote_last_fetch');
+    this.currentQuote = null;
+    this.loadQuoteOfTheDay();
+  }
+
+  // Test all categories
+  testAllCategories(): void {
+    console.log('🧪 TESTING ALL CATEGORIES');
+    const categories = ['random', 'teachers', 'students', 'motivation', 'inspiration', 'education'];
+    
+    categories.forEach(category => {
+      this.quoteService.testCategory(category).subscribe({
+        next: (response) => {
+          console.log(`✅ Category "${category}" works:`, response);
+        },
+        error: (error) => {
+          console.error(`❌ Category "${category}" failed:`, error);
+        }
+      });
+    });
+  }
+
+  // Random Fact method
+  private loadRandomFact(): void {
+    this.http.get<any>('https://uselessfacts.jsph.pl/api/v2/facts/random').subscribe({
+      next: (data) => {
+        this.currentFact = data.text;
+      },
+      error: (error) => {
+        this.factError = 'Failed to load a fact. Please try again later.';
+        this.currentFact = 'Could not fetch a fact at this time.';
+        console.error('Error fetching random fact:', error);
+      }
+    });
   }
 }

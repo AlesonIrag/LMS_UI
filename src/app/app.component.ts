@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { QuoteSchedulerService } from './services/quote-scheduler.service';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +9,13 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Library-Management-System-AI';
+
+  constructor(private quoteScheduler: QuoteSchedulerService) {}
+
+  ngOnInit(): void {
+    // Quote scheduler is automatically initialized via dependency injection
+    console.log('📱 App initialized with Quote Scheduler');
+  }
 }

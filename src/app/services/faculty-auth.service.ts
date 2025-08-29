@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ApiService } from './api.service';
 
 interface Faculty {
@@ -13,6 +14,26 @@ interface Faculty {
   status: string;
   specialization?: string;
   formattedFacultyId?: string; // The formatted ID like "2000-00001"
+  firstName?: string;
+  lastName?: string;
+  profilePhoto?: string;
+}
+
+export interface DetailedFaculty {
+  facultyId: string;
+  firstName: string;
+  lastName: string;
+  middleInitial: string;
+  suffix: string;
+  fullName: string;
+  department: string;
+  position: string;
+  email: string;
+  phoneNumber?: string;
+  profilePhoto?: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 @Injectable({
@@ -25,7 +46,12 @@ export class FacultyAuthService {
   public currentFaculty$ = this.currentFacultySubject.asObservable();
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  constructor(private apiService: ApiService) {
+  private apiUrl = 'http://localhost:3000/api/v1/facultyauth';
+
+  constructor(
+    private apiService: ApiService,
+    private http: HttpClient
+  ) {
     // Initialize as not authenticated by default
     this.isAuthenticatedSubject.next(false);
     this.currentFacultySubject.next(null);
@@ -100,14 +126,17 @@ export class FacultyAuthService {
         if (response && response.success && response.data) {
           const faculty: Faculty = {
             facultyId: response.data.FacultyID.toString(),
-            fullName: response.data.FullName,
+            fullName: response.data.fullName || response.data.FullName,
             department: response.data.Department,
             position: response.data.Position,
             email: response.data.Email,
             phoneNumber: response.data.PhoneNumber,
             status: response.data.Status,
             specialization: response.data.Specialization,
-            formattedFacultyId: response.data.FormattedFacultyID || facultyId
+            formattedFacultyId: response.data.FormattedFacultyID || facultyId,
+            firstName: response.data.FirstName,
+            lastName: response.data.LastName,
+            profilePhoto: response.data.ProfilePhoto
           };
 
           console.log('✅ Faculty data processed:', faculty);
@@ -290,5 +319,151 @@ export class FacultyAuthService {
       activeClasses: 4,
       researchProjects: 2
     });
+  }
+
+  /**
+   * Get detailed faculty profile information
+   */
+  getDetailedProfile(): Observable<DetailedFaculty | null> {
+    const currentFaculty = this.getCurrentFaculty();
+    if (!currentFaculty) {
+      return of(null);
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.getToken()}`
+    });
+
+    // Call the backend API to get detailed faculty information
+    return this.http.get(`${this.apiUrl}/get-faculty/${currentFaculty.facultyId}`, { headers }).pipe(
+      map((response: any) => {
+        if (response && response.success && response.data) {
+          const data = response.data;
+
+          const detailedFaculty = {
+            facultyId: data.FacultyID,
+            firstName: data.FirstName,
+            lastName: data.LastName,
+            middleInitial: data.MiddleInitial || '',
+            suffix: data.Suffix || '',
+            fullName: data.fullName || `${data.FirstName} ${data.LastName}`.trim(),
+            department: data.Department,
+            position: data.Position,
+            email: data.Email,
+            phoneNumber: data.PhoneNumber || '',
+            profilePhoto: data.ProfilePhoto || null,
+            status: data.Status,
+            createdAt: data.CreatedAt,
+            updatedAt: data.UpdatedAt
+          } as DetailedFaculty;
+
+          return detailedFaculty;
+        }
+        return null;
+      }),
+      catchError((error) => {
+        console.error('Error fetching detailed faculty profile:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Update faculty profile
+   */
+  updateDetailedProfile(profileData: any): Observable<boolean> {
+    console.log('🚀 Faculty auth service: updateDetailedProfile called');
+    console.log('📝 Profile data to send:', profileData);
+
+    const currentFaculty = this.getCurrentFaculty();
+    console.log('👤 Current faculty:', currentFaculty);
+
+    if (!currentFaculty) {
+      console.error('❌ No faculty logged in');
+      return throwError(() => new Error('No faculty logged in'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.getToken()}`,
+      'Content-Type': 'application/json'
+    });
+
+    const updateUrl = `${this.apiUrl}/update-faculty/${currentFaculty.facultyId}`;
+    console.log('🌐 Update URL:', updateUrl);
+    console.log('📤 Sending request with headers:', headers);
+
+    return this.http.put(updateUrl, profileData, { headers })
+      .pipe(
+        map((response: any) => {
+          console.log('✅ Faculty profile update response:', response);
+          if (response && response.success) {
+            console.log('✅ Faculty profile updated successfully');
+
+            // Update localStorage with new profile data
+            const updatedFaculty = { ...currentFaculty };
+            if (profileData.firstName) updatedFaculty.firstName = profileData.firstName;
+            if (profileData.lastName) updatedFaculty.lastName = profileData.lastName;
+            if (profileData.email) updatedFaculty.email = profileData.email;
+            if (profileData.phoneNumber) updatedFaculty.phoneNumber = profileData.phoneNumber;
+            if (profileData.profilePhoto) updatedFaculty.profilePhoto = profileData.profilePhoto;
+
+            localStorage.setItem('currentFaculty', JSON.stringify(updatedFaculty));
+            this.currentFacultySubject.next(updatedFaculty);
+
+            console.log('✅ Faculty localStorage updated:', updatedFaculty);
+            return true;
+          } else {
+            console.error('❌ Faculty profile update failed:', response);
+            return false;
+          }
+        }),
+        catchError((error) => {
+          console.error('❌ Error updating faculty profile:', error);
+          console.error('❌ Error status:', error.status);
+          console.error('❌ Error statusText:', error.statusText);
+          console.error('❌ Error message:', error.message);
+          console.error('❌ Error response body:', error.error);
+
+          if (error.error && error.error.details) {
+            console.error('❌ Validation errors from backend:', error.error.details);
+            error.error.details.forEach((validationError: any, index: number) => {
+              console.error(`❌ Validation Error ${index + 1}:`, validationError);
+            });
+          }
+
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Upload faculty profile photo
+   */
+  uploadProfilePhoto(file: File): Observable<string> {
+    console.log('🚀 Faculty auth service: uploadProfilePhoto called');
+    const currentFaculty = this.getCurrentFaculty();
+    console.log('👤 Current faculty in upload:', currentFaculty);
+
+    if (!currentFaculty) {
+      console.error('❌ No faculty logged in');
+      return throwError(() => new Error('No faculty logged in'));
+    }
+
+    console.log('📤 Calling API service with faculty ID:', currentFaculty.facultyId);
+    return this.apiService.uploadFacultyProfilePhoto(currentFaculty.facultyId, file).pipe(
+      map((response: any) => {
+        console.log('✅ Faculty photo upload response:', response);
+        if (response && response.success && response.data && response.data.imageUrl) {
+          const imageUrl = response.data.imageUrl;
+          console.log('✅ Profile photo uploaded successfully:', imageUrl);
+          return imageUrl;
+        }
+        return response.data?.imageUrl || response.imageUrl || response.url || '';
+      }),
+      catchError((error) => {
+        console.error('❌ Error uploading faculty photo:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

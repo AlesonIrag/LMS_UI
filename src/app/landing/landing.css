@@ -168,9 +168,27 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Prevent horizontal scroll on mobile */
-body {
+/* Prevent horizontal scroll on all devices */
+html, body {
   overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure all containers respect viewport width */
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent flex items from overflowing */
+.flex {
+  min-width: 0;
+}
+
+/* Ensure inputs don't cause overflow */
+input {
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Mobile navigation pane width adjustment for smaller screens */
@@ -201,3 +219,271 @@ body {
 #hamburger-icon {
   transition: all 0.3s ease;
 }
+
+/* Header SVG icon hover effects */
+.group:hover svg {
+  stroke: #fb923c !important; /* Orange-400 color */
+}
+
+/* Ensure SVG icons are visible - BLACK by default */
+header svg {
+  stroke: #000000 !important; /* BLACK color */
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Header smooth expansion - NO SCROLLBAR */
+header {
+  transition: height 0.3s ease, padding 0.3s ease;
+  overflow: hidden !important; /* Remove scrollbar completely */
+  height: 80px; /* A bit more height normally */
+  padding-bottom: 8px; /* A little bit more padding bottom normally */
+}
+
+/* Header expands when hovering navigation */
+header:has(.group:hover) {
+  height: 110px !important; /* Expand a little bit more to show text */
+  padding-bottom: 10px;
+}
+
+/* Navigation group positioning */
+header .group {
+  position: relative;
+}
+
+/* Text labels - positioned to show when header expands */
+header .group span {
+  position: absolute;
+  top: 40px; /* Position below the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+/* Show text when hovering */
+header .group:hover span {
+  opacity: 1;
+}
+
+/* ===== RESPONSIVE MOBILE NAVIGATION ===== */
+
+/* Desktop: Show navigation, hide burger menu */
+@media (min-width: 769px) {
+  #nav-links {
+    display: flex !important;
+  }
+
+  #mobile-burger {
+    display: none !important;
+  }
+}
+
+/* Mobile: Show burger menu, navigation slides in/out */
+@media (max-width: 768px) {
+  #mobile-burger {
+    display: flex !important;
+  }
+
+  /* Hide desktop navigation links on mobile (except when in mobile sidebar) */
+  header .group {
+    display: none !important;
+  }
+
+  /* Navigation links - hidden by default, slide in from right */
+  #nav-links {
+    position: fixed;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.96) 100%);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+    flex-direction: column;
+    width: 50vw;
+    height: 100vh;
+    padding: 5rem 2.5rem 2rem 2.5rem;
+    gap: 0;
+    transform: translateX(100%);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10000;
+    overflow-y: auto;
+  }
+
+  /* Show navigation when mobile menu is open */
+  #nav-links.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Disable header expansion on mobile */
+  header:has(.group:hover) {
+    height: 80px !important;
+    padding-bottom: 8px !important;
+  }
+
+  /* Hide text labels on mobile */
+  header .group span {
+    display: none !important;
+  }
+
+  /* Style navigation links for mobile - clean list style */
+  #nav-links .group {
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 1rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  #nav-links .group:hover {
+    background: transparent;
+    border-bottom-color: rgba(96, 165, 250, 0.5);
+    padding-left: 1rem;
+  }
+
+  #nav-links .group:active {
+    transform: scale(0.98);
+  }
+
+  #nav-links .group svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  #nav-links .group:hover svg {
+    color: #60a5fa;
+    transform: translateX(4px);
+  }
+
+  #nav-links .group span {
+    display: inline !important;
+    position: static !important;
+    opacity: 1 !important;
+    background: none !important;
+    color: #e2e8f0 !important;
+    font-size: 17px !important;
+    font-weight: 400 !important;
+    margin-left: 1rem;
+    transition: all 0.3s ease;
+    letter-spacing: 0.025em;
+  }
+
+  #nav-links .group:hover span {
+    color: #ffffff !important;
+    transform: translateX(4px);
+  }
+
+  /* Last item - no border */
+  #nav-links .group:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Mobile Overlay for blur effect - lighter and more transparent */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 9998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Fix close icon visibility - make it black with better styling */
+#close-icon {
+  stroke: #000000 !important;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  padding: 4px;
+  transition: all 0.3s ease;
+}
+
+#close-icon:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Ensure burger button stays on top */
+#mobile-burger {
+  position: relative;
+  z-index: 10001;
+}
+
+/* Ensure header stays on top */
+header {
+  position: relative;
+  z-index: 10001;
+}
+
+/* Mobile navigation header - hidden by default */
+.mobile-nav-header {
+  display: none;
+}
+
+/* Show mobile header only when navigation is open */
+#nav-links.mobile-open .mobile-nav-header {
+  display: block !important;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Animate navigation items when modal opens */
+#nav-links.mobile-open .group {
+  animation: slideInRight 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Stagger animation for each navigation item */
+#nav-links.mobile-open .group:nth-child(2) { animation-delay: 0.1s; }
+#nav-links.mobile-open .group:nth-child(3) { animation-delay: 0.15s; }
+#nav-links.mobile-open .group:nth-child(4) { animation-delay: 0.2s; }
+#nav-links.mobile-open .group:nth-child(5) { animation-delay: 0.25s; }
+#nav-links.mobile-open .group:nth-child(6) { animation-delay: 0.3s; }
+
+/* Keyframe animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
