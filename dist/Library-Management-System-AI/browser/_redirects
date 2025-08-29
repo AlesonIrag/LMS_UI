@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects for Angular SPA
+# This ensures that all routes are handled by Angular's router
+
+/* /index.html 200
