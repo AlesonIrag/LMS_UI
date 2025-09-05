@@ -6,6 +6,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AnnouncementService, Announcement, NewsItem } from '../../services/announcement.service';
 import { ToastService } from '../../services/toast.service';
 import { ToastComponent } from '../../components/toast/toast.component';
+
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -145,14 +146,32 @@ export class OverviewComponent implements OnInit, OnDestroy {
     }
 
     if (this.showEditAnnouncementModal && this.selectedItem) {
-      this.announcementService.updateAnnouncement(this.selectedItem.id!, this.announcementForm);
-      this.toastService.success('Announcement updated successfully');
+      this.announcementService.updateAnnouncement(this.selectedItem.id!, this.announcementForm).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('Announcement updated successfully');
+            this.closeAnnouncementModals();
+          }
+        },
+        error: (error) => {
+          console.error('Error updating announcement:', error);
+          this.toastService.error('Failed to update announcement');
+        }
+      });
     } else {
-      this.announcementService.addAnnouncement(this.announcementForm as Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'>);
-      this.toastService.success('Announcement created successfully');
+      this.announcementService.addAnnouncement(this.announcementForm as Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'>).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('Announcement created successfully');
+            this.closeAnnouncementModals();
+          }
+        },
+        error: (error) => {
+          console.error('Error creating announcement:', error);
+          this.toastService.error('Failed to create announcement');
+        }
+      });
     }
-
-    this.closeAnnouncementModals();
   }
 
   // News Management Methods
@@ -185,14 +204,32 @@ export class OverviewComponent implements OnInit, OnDestroy {
     }
 
     if (this.showEditNewsModal && this.selectedItem) {
-      this.announcementService.updateNews(this.selectedItem.id!, this.newsForm);
-      this.toastService.success('News updated successfully');
+      this.announcementService.updateNews(this.selectedItem.id!, this.newsForm).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('News updated successfully');
+            this.closeNewsModals();
+          }
+        },
+        error: (error) => {
+          console.error('Error updating news:', error);
+          this.toastService.error('Failed to update news');
+        }
+      });
     } else {
-      this.announcementService.addNews(this.newsForm as Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt'>);
-      this.toastService.success('News created successfully');
+      this.announcementService.addNews(this.newsForm as Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt'>).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('News created successfully');
+            this.closeNewsModals();
+          }
+        },
+        error: (error) => {
+          console.error('Error creating news:', error);
+          this.toastService.error('Failed to create news');
+        }
+      });
     }
-
-    this.closeNewsModals();
   }
 
   // Delete Methods
@@ -211,19 +248,45 @@ export class OverviewComponent implements OnInit, OnDestroy {
     if (!this.selectedItem) return;
 
     if (this.deleteType === 'announcement') {
-      this.announcementService.deleteAnnouncement(this.selectedItem.id!);
-      this.toastService.success('Announcement deleted successfully');
+      this.announcementService.deleteAnnouncement(this.selectedItem.id!).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('Announcement deleted successfully');
+            this.closeDeleteConfirm();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting announcement:', error);
+          this.toastService.error('Failed to delete announcement');
+        }
+      });
     } else {
-      this.announcementService.deleteNews(this.selectedItem.id!);
-      this.toastService.success('News deleted successfully');
+      this.announcementService.deleteNews(this.selectedItem.id!).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('News deleted successfully');
+            this.closeDeleteConfirm();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting news:', error);
+          this.toastService.error('Failed to delete news');
+        }
+      });
     }
-
-    this.closeDeleteConfirm();
   }
 
   // Utility Methods
   getTimeAgo(dateString: string): string {
     return this.announcementService.getTimeAgo(dateString);
+  }
+
+  getFormattedDate(dateString: string): string {
+    return this.announcementService.getFormattedDate(dateString);
+  }
+
+  getFormattedDateTime(dateString: string): string {
+    return this.announcementService.getFormattedDateTime(dateString);
   }
 
   getActiveAnnouncements(): Announcement[] {
@@ -262,4 +325,6 @@ export class OverviewComponent implements OnInit, OnDestroy {
       default: return 'bg-blue-500';
     }
   }
+
+
 }

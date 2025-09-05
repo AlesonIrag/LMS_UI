@@ -418,6 +418,15 @@ export class ApiService {
     return this.get(endpoint, { params });
   }
 
+  // System Settings endpoints
+  getCreditYearRange(): Observable<ApiResponse<{ creditYearRange: string }>> {
+    return this.get('/system-settings/credit-year-range');
+  }
+
+  updateCreditYearRange(creditYearRange: string): Observable<ApiResponse<{ creditYearRange: string }>> {
+    return this.put('/system-settings/credit-year-range', { creditYearRange });
+  }
+
   // Private methods
   private initializeConnectionMonitoring(): void {
     // Check connection every 30 seconds

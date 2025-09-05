@@ -7,10 +7,7 @@
     "start:separated": "ng serve --configuration=separated",
     "build": "ng build",
     "build:prod": "ng build --configuration=production",
-<<<<<<< HEAD
-=======
     "build:cloudflare": "ng build --configuration=production --output-path=dist/cloudflare",
->>>>>>> ed97ad38809dfe546039b4850311c5730e95a8c4
     "build:separated": "ng build --configuration=separated",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -40,30 +37,20 @@
     "@angular/platform-browser": "^20.0.6",
     "@angular/router": "^20.0.6",
     "@tailwindcss/postcss": "^4.1.11",
-<<<<<<< HEAD
-=======
     "axios": "^1.11.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
->>>>>>> ed97ad38809dfe546039b4850311c5730e95a8c4
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
     "@angular/build": "^20.0.5",
-<<<<<<< HEAD
-    "@angular/cli": "^20.0.5",
-    "@angular/compiler-cli": "^20.0.6",
-    "@types/jasmine": "~5.1.0",
-    "autoprefixer": "^10.4.21",
-=======
     "@angular/cli": "^20.1.6",
     "@angular/compiler-cli": "^20.0.6",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.21",
     "cliui": "^9.0.1",
->>>>>>> ed97ad38809dfe546039b4850311c5730e95a8c4
     "concurrently": "^9.1.0",
     "dotenv": "^17.1.0",
     "jasmine-core": "~5.7.0",

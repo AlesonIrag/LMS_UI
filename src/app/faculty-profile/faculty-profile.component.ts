@@ -642,16 +642,28 @@ export class FacultyProfileComponent implements OnInit {
     // Validate passwords
     if (!this.passwordData.currentPassword || !this.passwordData.newPassword || !this.passwordData.confirmPassword) {
       this.passwordError = 'All password fields are required.';
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        this.passwordError = null;
+      }, 5000);
       return;
     }
 
     if (this.passwordData.newPassword !== this.passwordData.confirmPassword) {
       this.passwordError = 'New passwords do not match.';
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        this.passwordError = null;
+      }, 5000);
       return;
     }
 
     if (this.passwordData.newPassword.length < 8) {
       this.passwordError = 'New password must be at least 8 characters long.';
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        this.passwordError = null;
+      }, 5000);
       return;
     }
 
@@ -678,6 +690,11 @@ export class FacultyProfileComponent implements OnInit {
         this.passwordSuccess = 'Password changed successfully!';
         this.toastService.success('Password changed successfully!');
 
+        // Auto-dismiss success message after 5 seconds
+        setTimeout(() => {
+          this.passwordSuccess = null;
+        }, 5000);
+
         // Close modal after success
         setTimeout(() => {
           this.closeChangePasswordModal();
@@ -686,12 +703,22 @@ export class FacultyProfileComponent implements OnInit {
         const errorMessage = data.message || 'Failed to change password. Please try again.';
         this.passwordError = errorMessage;
         this.toastService.error(errorMessage);
+        
+        // Auto-dismiss error message after 5 seconds
+        setTimeout(() => {
+          this.passwordError = null;
+        }, 5000);
       }
     } catch (error: any) {
       console.error('Change password error:', error);
       const errorMessage = 'An error occurred while changing password. Please try again.';
       this.passwordError = errorMessage;
       this.toastService.error(errorMessage);
+      
+      // Auto-dismiss error message after 5 seconds
+      setTimeout(() => {
+        this.passwordError = null;
+      }, 5000);
     } finally {
       this.isChangingPassword = false;
     }

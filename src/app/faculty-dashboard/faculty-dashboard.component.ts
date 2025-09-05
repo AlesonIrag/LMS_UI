@@ -8,6 +8,10 @@ import { WeatherLoggerService } from '../services/weather-logger.service';
 import { FacultyAuthService } from '../services/faculty-auth.service';
 import { ThemeService } from '../services/theme.service';
 import { AnnouncementService, Announcement, NewsItem } from '../services/announcement.service';
+import { Post, ReactionChangeEvent } from '../components/post-reactions/post-reactions.component';
+import { BookService, StudentBook } from '../services/book.service';
+import { NotificationService, Notification } from '../services/notification.service';
+
 
 interface WeatherResponse {
   success: boolean;
@@ -89,6 +93,7 @@ interface FacultyStats {
 })
 export class FacultyDashboardComponent implements OnInit, OnDestroy {
   @ViewChild('chatMessagesContainer') chatMessagesRef!: ElementRef;
+  @ViewChild('notificationButton') notificationButtonRef!: ElementRef;
 
   private weatherSubscription?: Subscription;
   private statsSubscription?: Subscription;
@@ -103,6 +108,8 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   showProfileModal: boolean = false;
   profileModalTop: string = '70px';
   profileModalRight: string = '20px';
+
+
 
   @ViewChild('profileButton', { static: false }) profileButton!: ElementRef;
 
@@ -163,7 +170,7 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   };
 
   // Data arrays
-  availableBooks: Book[] = [];
+
   currentLoans: Loan[] = [];
   reservations: Reservation[] = [];
   borrowingHistory: Loan[] = [];
@@ -183,13 +190,38 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   announcements: Announcement[] = [];
   private announcementSubscriptions: Subscription[] = [];
 
+  // Notifications
+  notifications: Notification[] = [];
+  facultyNotifications: Notification[] = [];
+  unreadNotificationCount: number = 0;
+  selectedNotification: Notification | null = null;
+  showNotificationDropdown: boolean = false;
+  notificationDropdownPosition = { top: 0, right: 0 };
+
+  // Book borrowing properties
+  availableBooks: StudentBook[] = [];
+  selectedBook: StudentBook | null = null;
+  showBorrowConfirmModal: boolean = false;
+  showBookDetailsModal: boolean = false;
+  showReserveModal: boolean = false;
+  reserveDate: string = '';
+  reserveEndDate: string = '';
+  isLoadingBooks: boolean = false;
+  booksError: string | null = null;
+
+  // Success message properties
+  showSuccessMessage: boolean = false;
+  successMessage: string = '';
+
   constructor(
     private router: Router,
     private http: HttpClient,
     private weatherLogger: WeatherLoggerService,
     private facultyAuthService: FacultyAuthService,
     private themeService: ThemeService,
-    private announcementService: AnnouncementService
+    private announcementService: AnnouncementService,
+    private bookService: BookService,
+    private notificationService: NotificationService
   ) {}
 
   // Getter for dark mode state from theme service
@@ -212,6 +244,8 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     this.loadQuoteOfTheDay();
     this.loadRandomFact();
     this.loadAnnouncements();
+    this.initializeNotifications();
+    this.loadAvailableBooks();
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
@@ -289,24 +323,47 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     let iconPath = '';
     switch (condition.toLowerCase()) {
       case 'clear':
-        iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+      case 'sunny':
+        // Sun icon
+        iconPath = 'M12 17q2.075 0 3.538-1.462Q17 14.075 17 12t-1.462-3.538Q14.075 7 12 7t-3.538 1.462Q7 9.925 7 12t1.462 3.538Q9.925 17 12 17Zm0 3q-.425 0-.712-.288Q11 19.425 11 19v-1q0-.425.288-.713Q11.575 17 12 17t.713.287Q13 17.575 13 18v1q0 .425-.287.712Q12.425 20 12 20Zm0-16q-.425 0-.712-.288Q11 3.425 11 3V2q0-.425.288-.713Q11.575 1 12 1t.713.287Q13 1.575 13 2v1q0 .425-.287.712Q12.425 4 12 4ZM5.6 6.6l-.7-.7q-.275-.275-.275-.7t.275-.7q.275-.275.7-.275t.7.275l.7.7q.275.275.275.7t-.275.7q-.275.275-.7.275t-.7-.275Zm12.8 0q-.275-.275-.275-.7t.275-.7l.7-.7q.275-.275.7-.275t.7.275q.275.275.275.7t-.275.7l-.7.7q-.275.275-.7.275t-.7-.275ZM19 13q-.425 0-.712-.288Q18 12.425 18 12t.288-.713Q18.575 11 19 11h1q.425 0 .712.287Q21 11.575 21 12t-.288.712Q20.425 13 20 13Zm-15 0q-.425 0-.712-.288Q3 12.425 3 12t.288-.713Q3.575 11 4 11h1q.425 0 .712.287Q6 11.575 6 12t-.288.712Q5.425 13 5 13Zm2.6 6.4q-.275-.275-.275-.7t.275-.7l.7-.7q.275-.275.7-.275t.7.275q.275.275.275.7t-.275.7l-.7.7q-.275.275-.7.275t-.7-.275Zm12.8 0l-.7-.7q-.275-.275-.275-.7t.275-.7q.275-.275.7-.275t.7.275l.7.7q.275.275.275.7t-.275.7q-.275.275-.7.275t-.7-.275Z';
         break;
       case 'clouds':
-        iconPath = 'M19.36 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96z';
+      case 'cloudy':
+      case 'overcast':
+      default:
+        // Cloud icon (DEFAULT)
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5Z';
         break;
       case 'rain':
-        iconPath = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
+      case 'rainy':
+      case 'drizzle':
+        // Rain cloud icon
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM9.5 22l-1-2h1l1 2h-1Zm4 0l-1-2h1l1 2h-1Zm4 0l-1-2h1l1 2h-1Z';
         break;
-      default:
-        iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+      case 'thunderstorm':
+      case 'storm':
+        // Storm cloud icon  
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM14.5 22l-2.5-4h2l-1-3h1.5l2.5 4h-2l1 3H14.5Z';
+        break;
+      case 'snow':
+      case 'snowy':
+        // Snow cloud icon
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM8 22v-1h1v1H8Zm2-1v-1h1v1h-1Zm2 1v-1h1v1h-1Zm2-1v-1h1v1h-1Zm2 1v-1h1v1h-1Z';
+        break;
+      case 'mist':
+      case 'fog':
+      case 'haze':
+        // Fog/mist icon
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM4 22v-1h16v1H4Zm0-2v-1h16v1H4Z';
+        break;
     }
 
     if (iconElement) {
-      iconElement.innerHTML = `<path d="${iconPath}"/>`;
+      iconElement.innerHTML = `<path fill="currentColor" d="${iconPath}"/>`;
     }
     
     if (iconElementMobile) {
-      iconElementMobile.innerHTML = `<path d="${iconPath}"/>`;
+      iconElementMobile.innerHTML = `<path fill="currentColor" d="${iconPath}"/>`;
     }
   }
 
@@ -688,47 +745,6 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Data loading methods
-  private loadAvailableBooks(): void {
-    // Mock data for faculty - academic and research focused books
-    this.availableBooks = [
-      {
-        id: 1,
-        title: "Advanced Database Systems",
-        author: "Dr. Sarah Johnson",
-        isbn: "978-0123456789",
-        category: "Computer Science",
-        availability: "Available",
-        location: "CS Section - Shelf A1",
-        description: "Comprehensive guide to modern database technologies",
-        publishedYear: 2023,
-        publisher: "Academic Press"
-      },
-      {
-        id: 2,
-        title: "Research Methodology in Education",
-        author: "Prof. Michael Chen",
-        isbn: "978-0987654321",
-        category: "Education",
-        availability: "Available",
-        location: "Education Section - Shelf E3",
-        description: "Essential methods for educational research",
-        publishedYear: 2022,
-        publisher: "Educational Publishers"
-      },
-      {
-        id: 3,
-        title: "Machine Learning Fundamentals",
-        author: "Dr. Emily Rodriguez",
-        isbn: "978-0456789123",
-        category: "Computer Science",
-        availability: "Checked Out",
-        location: "CS Section - Shelf A2",
-        description: "Introduction to ML concepts and applications",
-        publishedYear: 2023,
-        publisher: "Tech Publications"
-      }
-    ];
-  }
 
   private loadCurrentLoans(): void {
     // Mock current loans for faculty
@@ -872,7 +888,7 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getFilteredBooks(): Book[] {
+  private getFilteredBooks(): StudentBook[] {
     let filtered = this.availableBooks;
 
     if (this.searchFilter) {
@@ -966,10 +982,6 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Faculty-specific action methods
-  borrowBook(bookId: number): void {
-    console.log('Faculty borrowing book:', bookId);
-    // Implement faculty book borrowing logic
-  }
 
   reserveBook(bookId: number): void {
     console.log('Faculty reserving book:', bookId);
@@ -1132,10 +1144,32 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Utility methods for announcements
-  getTimeAgo(dateString: string): string {
+  getTimeAgo(dateString: string | Date): string {
+    if (dateString instanceof Date) {
+      const now = new Date();
+      const diffInMs = now.getTime() - dateString.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInHours < 24) return `${diffInHours}h ago`;
+      if (diffInDays < 7) return `${diffInDays}d ago`;
+      return dateString.toLocaleDateString();
+    }
     return this.announcementService.getTimeAgo(dateString);
   }
 
+  getFormattedDate(dateString: string): string {
+    return this.announcementService.getFormattedDate(dateString);
+  }
+
+  getFormattedDateTime(dateString: string): string {
+    return this.announcementService.getFormattedDateTime(dateString);
+  }
+
+  // Image modal methods
   getTypeIcon(type: string): string {
     switch (type) {
       case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
@@ -1163,5 +1197,276 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
       case 'purple': return 'bg-purple-500';
       default: return 'bg-blue-500';
     }
+  }
+
+  // Reaction Methods
+  getAnnouncementAsPost(announcement: Announcement): Post {
+    return {
+      id: announcement.id!,
+      title: announcement.title,
+      content: announcement.content,
+      type: announcement.type,
+      total_reactions: 0, // This will be loaded by the component
+      reactions: {}
+    };
+  }
+
+  getNewsAsPost(newsItem: NewsItem): Post {
+    return {
+      id: newsItem.id!,
+      title: newsItem.text,
+      content: newsItem.text,
+      type: newsItem.type,
+      total_reactions: 0, // This will be loaded by the component
+      reactions: {}
+    };
+  }
+
+  onReactionChanged(event: ReactionChangeEvent): void {
+    console.log('Faculty reaction changed:', event);
+    // You can add any additional logic here, such as:
+    // - Updating local state
+    // - Showing notifications
+    // - Analytics tracking
+  }
+
+  // Notification methods
+  toggleNotificationDropdown(): void {
+    this.showNotificationDropdown = !this.showNotificationDropdown;
+
+    if (this.showNotificationDropdown && this.notificationButtonRef) {
+      // Calculate position relative to the notification button
+      const buttonElement = this.notificationButtonRef.nativeElement;
+      const rect = buttonElement.getBoundingClientRect();
+
+      // Position dropdown below and to the right of the button
+      this.notificationDropdownPosition = {
+        top: rect.bottom + 8, // 8px gap below button
+        right: window.innerWidth - rect.right // Align right edge with button
+      };
+    }
+  }
+
+  markAllNotificationsAsRead(): void {
+    this.notificationService.markAllAsRead();
+  }
+
+  markNotificationAsRead(notificationId: string): void {
+    this.notificationService.markAsRead(notificationId);
+  }
+
+
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    // Check if click is on notification button or dropdown
+    const isNotificationButton = this.notificationButtonRef &&
+      this.notificationButtonRef.nativeElement.contains(target);
+    const isNotificationDropdown = target.closest('[data-notification-dropdown]');
+
+    // Close notification dropdown if clicking outside
+    if (!isNotificationButton && !isNotificationDropdown && this.showNotificationDropdown) {
+      this.showNotificationDropdown = false;
+    }
+  }
+
+  // Book borrowing methods
+  borrowBook(bookId: string): void {
+    console.log(`Opening borrow confirmation for book: ${bookId}`);
+
+    const book = this.availableBooks.find(b => b.id.toString() === bookId);
+    if (!book) {
+      console.error('Book not found');
+      return;
+    }
+
+    if (book.availability !== 'Available') {
+      console.error('Book is not available for borrowing');
+      return;
+    }
+
+    const currentFaculty = this.facultyAuthService.getCurrentFaculty();
+    if (!currentFaculty) {
+      console.error('No faculty logged in');
+      return;
+    }
+
+    // Show confirmation modal
+    this.selectedBook = {
+      ...book,
+      copies: book.copies || 1
+    };
+    this.showBorrowConfirmModal = true;
+  }
+
+  confirmBorrowBook(): void {
+    if (!this.selectedBook) {
+      console.error('No book selected');
+      return;
+    }
+
+    const currentFaculty = this.facultyAuthService.getCurrentFaculty();
+    if (!currentFaculty) {
+      console.error('No faculty logged in');
+      return;
+    }
+
+    const reservationRequest = {
+      facultyId: currentFaculty.facultyId,
+      bookId: parseInt(this.selectedBook.id),
+      status: 'Pending'
+    };
+
+    // Close the confirmation modal
+    this.showBorrowConfirmModal = false;
+
+    this.http.post('http://localhost:3000/api/v1/borrowing/create-reservation', reservationRequest).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          // Show success message
+          this.showSuccessMessage = true;
+          this.successMessage = `Successfully created reservation for "${this.selectedBook!.title}"! Please wait for admin approval.`;
+
+          // Create notification for admin
+          this.notificationService.addNotification({
+            type: 'reservation_request',
+            title: 'New Book Reservation',
+            message: `${currentFaculty.fullName} has requested to borrow "${this.selectedBook!.title}"`,
+            recipientType: 'admin',
+            recipientId: 'admin',
+            relatedBookTitle: this.selectedBook!.title,
+            relatedStudentId: currentFaculty.facultyId,
+            relatedStudentName: currentFaculty.fullName,
+            actionRequired: true,
+            actionData: {
+              facultyId: currentFaculty.facultyId,
+              facultyName: currentFaculty.fullName,
+              bookId: this.selectedBook!.id,
+              bookTitle: this.selectedBook!.title
+            }
+          });
+
+          console.log('✅ Book reservation created successfully!');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error creating reservation:', error);
+        this.showSuccessMessage = true;
+        this.successMessage = 'Failed to create reservation. Please try again.';
+      }
+    });
+  }
+
+  cancelBorrowBook(): void {
+    this.showBorrowConfirmModal = false;
+    this.selectedBook = null;
+  }
+
+  viewBookDetails(book: any): void {
+    this.selectedBook = book;
+    this.showBookDetailsModal = true;
+  }
+
+  closeBookDetailsModal(): void {
+    this.showBookDetailsModal = false;
+    this.selectedBook = null;
+  }
+
+  // Initialize notifications for faculty
+  private initializeNotifications(): void {
+    const currentFaculty = this.facultyAuthService.getCurrentFaculty();
+    if (currentFaculty) {
+      // Subscribe to notifications for this faculty member
+      this.notificationService.getNotificationsForRecipient('student', currentFaculty.facultyId)
+        .subscribe(notifications => {
+          this.notifications = notifications;
+          this.facultyNotifications = notifications;
+          this.unreadNotificationCount = notifications.filter(n => !n.isRead).length;
+        });
+    }
+  }
+
+  // Load available books
+  private loadAvailableBooks(): void {
+    this.isLoadingBooks = true;
+    this.booksError = null;
+
+    this.bookService.getAllBooks().subscribe({
+      next: (books) => {
+        this.availableBooks = books.map(book => ({
+          id: book.id.toString(),
+          title: book.title,
+          author: book.author,
+          isbn: book.isbn,
+          category: book.category,
+          availability: book.availability,
+          location: book.location,
+          description: book.description,
+          publishedYear: book.publishedYear,
+          publisher: book.publisher,
+          copies: book.copies || 1
+        }));
+        this.isLoadingBooks = false;
+        console.log(`📚 Loaded ${this.availableBooks.length} books for faculty`);
+      },
+      error: (error) => {
+        console.error('❌ Error loading books:', error);
+        this.booksError = 'Failed to load books from database';
+        this.isLoadingBooks = false;
+        this.availableBooks = [];
+      }
+    });
+  }
+
+  // Reaction Methods for Posts - TEMPORARILY DISABLED
+  /*
+  getAnnouncementAsPost(announcement: Announcement): Post {
+    return {
+      id: announcement.id!,
+      title: announcement.title,
+      content: announcement.content,
+      type: announcement.type,
+      total_reactions: 0, // This will be loaded by the component
+      reactions: {}
+    };
+  }
+
+  getNewsAsPost(newsItem: NewsItem): Post {
+    return {
+      id: newsItem.id!,
+      title: `News: ${newsItem.text}`,
+      content: newsItem.text,
+      type: newsItem.type,
+      total_reactions: 0, // Will be loaded by component
+      reactions: {}
+    };
+  }
+
+  onReactionChanged(event: ReactionChangeEvent): void {
+    console.log('Faculty dashboard - Reaction changed:', event);
+    // Handle reaction changes specific to faculty dashboard
+    // You can add additional logic here such as:
+    // - Analytics tracking
+    // - Local state updates
+    // - Notifications
+    
+    // Optional: Show console feedback
+    if (event.action === 'added') {
+      console.log('Faculty member liked a post!');
+    } else if (event.action === 'removed') {
+      console.log('Faculty member unliked a post.');
+    }
+  }
+  */
+
+  // Track by functions for ngFor performance
+  trackByNewsId(index: number, item: NewsItem): any {
+    return item.id;
+  }
+
+  trackByAnnouncementId(index: number, item: Announcement): any {
+    return item.id;
   }
 }

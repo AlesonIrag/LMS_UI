@@ -16,6 +16,7 @@ import { SystemSettingsComponent } from './dashboard/system-settings/system-sett
 import { ActivityLogsComponent } from './dashboard/activity-logs/activity-logs.component';
 import { ProfileComponent } from './dashboard/profile/profile.component';
 import { CatalogingRouteComponent } from './dashboard/cataloging/cataloging-route.component';
+import { ArchivedBooksComponent } from './dashboard/archived-books/archived-books.component';
 import { StudentDashboardComponent } from './student-dashboard/student-dashboard.component';
 import { StudentProfileComponent } from './student-profile/student-profile.component';
 import { FacultyDashboardComponent } from './faculty-dashboard/faculty-dashboard.component';
@@ -53,6 +54,7 @@ export const routes: Routes = [
             // Additional dashboard components
             { path: 'borrowing', component: BorrowingComponent },
             { path: 'reservations', component: ReservationsComponent },
+            { path: 'archived-books', component: ArchivedBooksComponent },
             { path: 'faculty', component: FacultyComponent },
             { path: 'system-settings', component: SystemSettingsComponent },
             { path: 'logs', component: ActivityLogsComponent },

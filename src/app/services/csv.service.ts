@@ -102,32 +102,80 @@ export class CsvService {
     const valid: any[] = [];
     const invalid: any[] = [];
 
+    // Helper function to generate a secure password
+    const generateSecurePassword = (): string => {
+      const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+      const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const numbers = '0123456789';
+      const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+      
+      // Ensure at least one character from each set
+      let password = '';
+      password += lowercase[Math.floor(Math.random() * lowercase.length)];
+      password += uppercase[Math.floor(Math.random() * uppercase.length)];
+      password += numbers[Math.floor(Math.random() * numbers.length)];
+      password += symbols[Math.floor(Math.random() * symbols.length)];
+      
+      // Fill the rest with random characters
+      const allChars = lowercase + uppercase + numbers + symbols;
+      for (let i = 4; i < 12; i++) {
+        password += allChars[Math.floor(Math.random() * allChars.length)];
+      }
+      
+      // Shuffle the password
+      return password.split('').sort(() => 0.5 - Math.random()).join('');
+    };
+
     data.forEach((row, index) => {
       const errors: string[] = [];
       
       // Required fields validation
-      if (!row.studentId?.trim()) errors.push('Student ID is required');
-      if (!row.firstName?.trim()) errors.push('First name is required');
-      if (!row.lastName?.trim()) errors.push('Last name is required');
-      if (!row.email?.trim()) errors.push('Email is required');
-      if (!row.password?.trim()) errors.push('Password is required');
-      if (!row.course?.trim()) errors.push('Course is required');
-      if (!row.yearLevel?.trim()) errors.push('Year level is required');
+      if (!row.studentId?.trim() && !row.StudentID?.trim() && !row.studentID?.trim()) errors.push('Student ID is required');
+      if (!row.firstName?.trim() && !row.FirstName?.trim()) errors.push('First name is required');
+      if (!row.lastName?.trim() && !row.LastName?.trim()) errors.push('Last name is required');
+      if (!row.email?.trim() && !row.Email?.trim()) errors.push('Email is required');
+      // Password is now optional for security - will be auto-generated if not provided
+      if (!row.course?.trim() && !row.Course?.trim()) errors.push('Course is required');
+      if (!row.yearLevel?.trim() && !row.YearLevel?.trim()) errors.push('Year level is required');
       
       // Email validation
-      if (row.email && !this.isValidEmail(row.email)) {
+      const emailValue = row.email || row.Email || '';
+      if (emailValue && !this.isValidEmail(emailValue)) {
         errors.push('Invalid email format');
       }
       
       // Student ID format validation (if needed)
-      if (row.studentId && !this.isValidStudentId(row.studentId)) {
+      const studentIdValue = row.studentId || row.StudentID || row.studentID || '';
+      if (studentIdValue && !this.isValidStudentId(studentIdValue)) {
         errors.push('Invalid student ID format');
       }
 
+      // Year level validation
+      const yearLevelValue = row.yearLevel || row.YearLevel || '';
+      if (yearLevelValue && (isNaN(yearLevelValue) || yearLevelValue < 1 || yearLevelValue > 4)) {
+        errors.push('Year level must be between 1 and 4');
+      }
+
+      // Create validated row with proper field mapping
+      const validatedRow = {
+        studentID: studentIdValue || '', // Map to correct field name
+        firstName: row.firstName || row.FirstName || '',
+        lastName: row.lastName || row.LastName || '',
+        middleInitial: row.middleInitial || row.MiddleInitial || '',
+        suffix: row.suffix || row.Suffix || '',
+        email: emailValue,
+        phoneNumber: row.phoneNumber || row.PhoneNumber || '',
+        password: row.password?.trim() || generateSecurePassword(), // Auto-generate if not provided
+        course: row.course || row.Course || '',
+        yearLevel: parseInt(row.yearLevel || row.YearLevel) || 1, // Convert to number as required by API
+        section: row.section || row.Section || '',
+        status: row.status || row.Status || 'Active'
+      };
+
       if (errors.length === 0) {
-        valid.push(row);
+        valid.push(validatedRow);
       } else {
-        invalid.push({ ...row, rowNumber: index + 2, errors });
+        invalid.push({ ...validatedRow, rowNumber: index + 2, errors });
       }
     });
 
@@ -139,32 +187,73 @@ export class CsvService {
     const valid: any[] = [];
     const invalid: any[] = [];
 
+    // Helper function to generate a secure password
+    const generateSecurePassword = (): string => {
+      const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+      const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const numbers = '0123456789';
+      const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+      
+      // Ensure at least one character from each set
+      let password = '';
+      password += lowercase[Math.floor(Math.random() * lowercase.length)];
+      password += uppercase[Math.floor(Math.random() * uppercase.length)];
+      password += numbers[Math.floor(Math.random() * numbers.length)];
+      password += symbols[Math.floor(Math.random() * symbols.length)];
+      
+      // Fill the rest with random characters
+      const allChars = lowercase + uppercase + numbers + symbols;
+      for (let i = 4; i < 12; i++) {
+        password += allChars[Math.floor(Math.random() * allChars.length)];
+      }
+      
+      // Shuffle the password
+      return password.split('').sort(() => 0.5 - Math.random()).join('');
+    };
+
     data.forEach((row, index) => {
       const errors: string[] = [];
       
       // Required fields validation
-      if (!row.facultyId?.trim()) errors.push('Faculty ID is required');
-      if (!row.firstName?.trim()) errors.push('First name is required');
-      if (!row.lastName?.trim()) errors.push('Last name is required');
-      if (!row.email?.trim()) errors.push('Email is required');
-      if (!row.password?.trim()) errors.push('Password is required');
-      if (!row.department?.trim()) errors.push('Department is required');
-      if (!row.position?.trim()) errors.push('Position is required');
+      if (!row.facultyId?.trim() && !row.FacultyID?.trim() && !row.facultyID?.trim()) errors.push('Faculty ID is required');
+      if (!row.firstName?.trim() && !row.FirstName?.trim()) errors.push('First name is required');
+      if (!row.lastName?.trim() && !row.LastName?.trim()) errors.push('Last name is required');
+      if (!row.email?.trim() && !row.Email?.trim()) errors.push('Email is required');
+      // Password is now optional for security - will be auto-generated if not provided
+      if (!row.department?.trim() && !row.Department?.trim()) errors.push('Department is required');
+      if (!row.position?.trim() && !row.Position?.trim()) errors.push('Position is required');
       
       // Email validation
-      if (row.email && !this.isValidEmail(row.email)) {
+      const emailValue = row.email || row.Email || '';
+      if (emailValue && !this.isValidEmail(emailValue)) {
         errors.push('Invalid email format');
       }
       
       // Faculty ID format validation
-      if (row.facultyId && !this.isValidFacultyId(row.facultyId)) {
+      const facultyIdValue = row.facultyId || row.FacultyID || row.facultyID || '';
+      if (facultyIdValue && !this.isValidFacultyId(facultyIdValue)) {
         errors.push('Invalid faculty ID format (should be YYYY-NNNNN)');
       }
 
+      // Create validated row with proper field mapping
+      const validatedRow = {
+        facultyID: facultyIdValue || '', // Map to correct field name
+        firstName: row.firstName || row.FirstName || '',
+        lastName: row.lastName || row.LastName || '',
+        middleInitial: row.middleInitial || row.MiddleInitial || '',
+        suffix: row.suffix || row.Suffix || '',
+        email: emailValue,
+        phoneNumber: row.phoneNumber || row.PhoneNumber || '',
+        password: row.password?.trim() || generateSecurePassword(), // Auto-generate if not provided
+        department: row.department || row.Department || '',
+        position: row.position || row.Position || '',
+        status: row.status || row.Status || 'Active'
+      };
+
       if (errors.length === 0) {
-        valid.push(row);
+        valid.push(validatedRow);
       } else {
-        invalid.push({ ...row, rowNumber: index + 2, errors });
+        invalid.push({ ...validatedRow, rowNumber: index + 2, errors });
       }
     });
 
@@ -179,7 +268,7 @@ export class CsvService {
     data.forEach((row, index) => {
       const errors: string[] = [];
 
-      // Required fields validation - check both formats (Title/title)
+      // Required fields validation - check multiple format variations
       const title = row.Title || row.title;
       const author = row.Author || row.author;
       const isbn = row.ISBN || row.isbn;
@@ -194,9 +283,21 @@ export class CsvService {
       }
 
       // Year validation
-      const publishedYear = row.PublishedYear || row.publicationYear;
+      const publishedYear = row.PublishedYear || row.publicationYear || row.publishedYear;
       if (publishedYear && (isNaN(publishedYear) || publishedYear < 1000 || publishedYear > 2030)) {
         errors.push('Published year must be between 1000 and 2030');
+      }
+
+      // Copyright year validation
+      const copyrightYear = row.CopyrightYear || row.copyrightYear;
+      if (copyrightYear && (isNaN(copyrightYear) || copyrightYear < 1000 || copyrightYear > 2030)) {
+        errors.push('Copyright year must be between 1000 and 2030');
+      }
+
+      // Copies validation
+      const copies = row.Copies || row.copies || row.quantity;
+      if (copies && (isNaN(copies) || copies < 0)) {
+        errors.push('Copies must be a non-negative number');
       }
 
       if (errors.length === 0) {

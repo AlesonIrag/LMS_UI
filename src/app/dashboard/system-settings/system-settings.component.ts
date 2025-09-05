@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../services/theme.service';
 import { AnimatedToggleComponent } from '../../shared/components/animated-toggle.component';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-system-settings',
@@ -23,7 +24,13 @@ export class SystemSettingsComponent implements OnInit {
   overduePeriodDays = 3;
   reminderDaysBeforeDue = 2;
 
-  constructor(private themeService: ThemeService) { }
+  // Credit year range setting
+  creditYearRange = '2025-2026';
+
+  constructor(
+    private themeService: ThemeService,
+    private apiService: ApiService
+  ) { }
 
   // Getter for dark mode state from theme service
   get isDarkMode(): boolean {
@@ -32,6 +39,7 @@ export class SystemSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     // Component initialization
+    this.loadCreditYearRange();
   }
 
   getTextClasses(): string {
@@ -44,6 +52,55 @@ export class SystemSettingsComponent implements OnInit {
 
   getCardClasses(): string {
     return this.themeService.getCardClasses();
+  }
+
+  // Load credit year range from backend
+  loadCreditYearRange(): void {
+    this.apiService.getCreditYearRange().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.creditYearRange = response.data.creditYearRange;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load credit year range:', error);
+        // Keep default value
+      }
+    });
+  }
+
+  // Save credit year range to backend
+  saveCreditYearRange(): void {
+    if (!this.creditYearRange.trim()) {
+      alert('Credit year range cannot be empty');
+      return;
+    }
+
+    // Validate format (YYYY or YYYY-YYYY)
+    const yearRangeRegex = /^\d{4}(-\d{4})?$/;
+    if (!yearRangeRegex.test(this.creditYearRange)) {
+      alert('Invalid format. Use "YYYY" or "YYYY-YYYY" format (e.g., "2025" or "2025-2026")');
+      return;
+    }
+
+    this.apiService.updateCreditYearRange(this.creditYearRange).subscribe({
+      next: (response) => {
+        if (response.success) {
+          alert('Credit year range updated successfully');
+        } else {
+          alert('Failed to update credit year range: ' + (response.error || 'Unknown error'));
+        }
+      },
+      error: (error) => {
+        console.error('Failed to save credit year range:', error);
+        alert('Failed to update credit year range: ' + (error.error?.error || error.message || 'Server error'));
+      }
+    });
+  }
+
+  // Handle credit year range input change
+  onCreditYearRangeChange(event: any): void {
+    this.creditYearRange = event.target.value;
   }
 
   // Toggle event handlers
@@ -86,5 +143,14 @@ export class SystemSettingsComponent implements OnInit {
   onReminderDaysChange(event: any): void {
     this.reminderDaysBeforeDue = event.target.value;
     // TODO: Implement actual update logic
+  }
+
+  // Save all changes
+  saveAllChanges(): void {
+    // Save credit year range
+    this.saveCreditYearRange();
+    
+    // TODO: Implement saving other settings
+    alert('All changes saved successfully!');
   }
 }

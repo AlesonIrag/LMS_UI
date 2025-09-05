@@ -452,6 +452,11 @@ export class ProfileComponent implements OnInit {
         this.passwordSuccess = 'Password changed successfully!';
         this.toastService.success('Password changed successfully!');
         
+        // Auto-dismiss success message after 5 seconds
+        setTimeout(() => {
+          this.passwordSuccess = null;
+        }, 5000);
+        
         // Close modal after success
         setTimeout(() => {
           this.closeChangePasswordModal();
@@ -459,11 +464,21 @@ export class ProfileComponent implements OnInit {
       } else {
         this.passwordError = result.message || 'Failed to change password';
         this.toastService.error(this.passwordError || 'Failed to change password');
+        
+        // Auto-dismiss error message after 5 seconds
+        setTimeout(() => {
+          this.passwordError = null;
+        }, 5000);
       }
     } catch (error) {
       console.error('Error changing admin password:', error);
       this.passwordError = 'An error occurred while changing password';
       this.toastService.error('An error occurred while changing password');
+      
+      // Auto-dismiss error message after 5 seconds
+      setTimeout(() => {
+        this.passwordError = null;
+      }, 5000);
     } finally {
       this.isChangingPassword = false;
     }

@@ -290,7 +290,7 @@ tudents Table -->
           </td>
           <td class="px-6 py-4 text-sm">
             <div class="flex space-x-2">
-              <button (click)="editStudent(student.StudentID)"
+              <button (click)="openEditStudentModal(student)"
                 class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                 Edit
               </button>
@@ -579,8 +579,21 @@ tudents Table -->
               [class.border-red-500]="validationErrors.password"
               placeholder="Enter password"
               required>
+                <em>Copy this for password Instantation:
+                  <br>
+                     <button id="copyButton">
+                <svg width="20px" height="20px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4 4l1-1h5.414L14 6.586V14l-1 1H5l-1-1V4zm9 3l-3-3H5v10h8V7z"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z"/>
+              </svg>
+              </button>
+                </em>
+                <strong>
+                <input type="text" id="textToCopy" value="Lms2026Password" readonly>
+                </strong>
             <div *ngIf="validationErrors.password" class="text-red-500 text-sm mt-1">
               {{ validationErrors.password }}
+            
             </div>
           </div>
         </div>
@@ -856,6 +869,192 @@ tudents Table -->
   </div>
 </div>
 
+<!-- Edit Student Modal -->
+<div *ngIf="showEditStudentModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto modal-content">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+      <div class="flex items-center">
+        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Student</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Update student information</p>
+        </div>
+      </div>
+      <button (click)="closeEditStudentModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6">
+      <form (ngSubmit)="updateStudent()" #editForm="ngForm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Student ID (Read-only) -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Student ID</label>
+            <input type="text"
+                   [(ngModel)]="editStudent.studentID"
+                   name="studentID"
+                   readonly
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed">
+          </div>
+
+          <!-- First Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name *</label>
+            <input type="text"
+                   [(ngModel)]="editStudent.firstName"
+                   name="firstName"
+                   required
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Last Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name *</label>
+            <input type="text"
+                   [(ngModel)]="editStudent.lastName"
+                   name="lastName"
+                   required
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Middle Initial -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Middle Initial</label>
+            <input type="text"
+                   [(ngModel)]="editStudent.middleInitial"
+                   name="middleInitial"
+                   maxlength="10"
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Suffix -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Suffix</label>
+            <input type="text"
+                   [(ngModel)]="editStudent.suffix"
+                   name="suffix"
+                   maxlength="20"
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Course -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course *</label>
+            <select [(ngModel)]="editStudent.course"
+                    name="course"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+              <option value="">Select Course</option>
+              <option value="BSIT">BSIT - Bachelor of Science in Information Technology</option>
+              <option value="BSCS">BSCS - Bachelor of Science in Computer Science</option>
+              <option value="BSBA">BSBA - Bachelor of Science in Business Administration</option>
+              <option value="BSED">BSED - Bachelor of Science in Education</option>
+              <option value="BSHRM">BSHRM - Bachelor of Science in Hotel and Restaurant Management</option>
+              <option value="BSTM">BSTM - Bachelor of Science in Tourism Management</option>
+            </select>
+          </div>
+
+          <!-- Year Level -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Year Level *</label>
+            <select [(ngModel)]="editStudent.yearLevel"
+                    name="yearLevel"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+              <option value="">Select Year Level</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">5th Year</option>
+              <option value="6">6th Year</option>
+            </select>
+          </div>
+
+          <!-- Section -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Section</label>
+            <input type="text"
+                   [(ngModel)]="editStudent.section"
+                   name="section"
+                   maxlength="50"
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address *</label>
+            <input type="email"
+                   [(ngModel)]="editStudent.email"
+                   name="email"
+                   required
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Phone Number -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+            <input type="tel"
+                   [(ngModel)]="editStudent.phoneNumber"
+                   name="phoneNumber"
+                   placeholder="09XXXXXXXXX"
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+          </div>
+
+          <!-- Enrollment Status -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Enrollment Status</label>
+            <select [(ngModel)]="editStudent.enrollmentStatus"
+                    name="enrollmentStatus"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <!-- Account Status -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Status</label>
+            <select [(ngModel)]="editStudent.accountStatus"
+                    name="accountStatus"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+              <option value="Allowed">Allowed</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+      <button (click)="closeEditStudentModal()"
+        class="px-6 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200 font-medium">
+        Cancel
+      </button>
+      <button (click)="updateStudent()"
+        [disabled]="isSubmitting"
+        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors duration-200 flex items-center font-medium shadow-lg">
+        <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ isSubmitting ? 'Updating...' : 'Update Student' }}
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- CSV Import Modal -->
 <div *ngIf="showImportCsvModal"
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay">
@@ -885,17 +1084,31 @@ tudents Table -->
       <!-- Step 1: Upload CSV -->
       <div *ngIf="csvImportStep === 'upload'">
         <div class="text-center mb-6">
-          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8">
-            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Enhanced drag-and-drop area -->
+          <div class="border-2 border-dashed rounded-lg p-8 transition-all duration-200"
+               [class]="isDragOver ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-500' : 'border-gray-300 dark:border-gray-600'"
+               (dragover)="onDragOver($event)"
+               (dragleave)="onDragLeave($event)"
+               (drop)="onDrop($event)">
+            <svg class="w-12 h-12 mx-auto mb-4 transition-colors duration-200"
+                 [class]="isDragOver ? 'text-blue-500' : 'text-gray-400'"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
             </svg>
-            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload CSV File</h4>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">Select a CSV file containing student data</p>
+            <h4 class="text-lg font-medium mb-2 transition-colors duration-200"
+                [class]="isDragOver ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'">
+              {{ isDragOver ? 'Drop CSV file here' : 'Upload CSV File' }}
+            </h4>
+            <p class="mb-4 transition-colors duration-200"
+               [class]="isDragOver ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'">
+              {{ isDragOver ? 'Release to upload your file' : 'Drag and drop a CSV file here, or click to browse' }}
+            </p>
             <input type="file" accept=".csv" (change)="onCsvFileSelected($event)"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200">
           </div>
         </div>
 
+        <!-- Enhanced format requirements -->
         <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
           <div class="flex">
             <svg class="w-5 h-5 text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -904,11 +1117,17 @@ tudents Table -->
             <div class="text-sm text-yellow-800 dark:text-yellow-200">
               <p class="font-medium">CSV Format Requirements:</p>
               <ul class="mt-2 list-disc list-inside space-y-1">
-                <li>Headers: studentId, firstName, lastName, middleInitial, suffix, email, phoneNumber, password, course, yearLevel, status</li>
-                <li>Student ID format: YYYY-NNNNN (e.g., 2024-12345)</li>
-                <li>Valid email addresses required</li>
-                <li>Password minimum 6 characters</li>
+                <li><strong>Required headers:</strong> firstName, lastName, email, course, yearLevel</li>
+                <li><strong>Optional headers:</strong> studentId, middleInitial, suffix, phoneNumber, section, status</li>
+                <li><strong>Student ID:</strong> Leave blank for auto-generation or use format YYYY-NNNNN</li>
+                <li><strong>Course values:</strong> BSIT, BSCS, BSN, BSBA, BSED, BSHRM</li>
+                <li><strong>Year Level:</strong> 1, 2, 3, or 4</li>
+                <li><strong>File requirements:</strong> CSV (.csv extension), Maximum 10MB, UTF-8 encoding</li>
+                <li><strong>Password:</strong> Optional - secure passwords auto-generated if not provided</li>
+                <li><strong>Email:</strong> Valid email format required (institutional email preferred)</li>
+                <li><strong>Security:</strong> <span class="font-semibold text-green-600 dark:text-green-400">Passwords auto-generated securely</span> - never include passwords in CSV</li>
               </ul>
+              <p class="mt-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 p-2 rounded"><strong>Security Best Practice:</strong> For security reasons, passwords are automatically generated with strong encryption during import.</p>
             </div>
           </div>
         </div>
@@ -994,6 +1213,153 @@ tudents Table -->
         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium shadow-lg"
         [disabled]="isSubmitting">
         Import {{ csvValidationResults.valid.length }} Students
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Student Modal -->
+<div *ngIf="showDeleteStudentModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 modal-content">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20">
+      <div class="flex items-center">
+        <div class="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Student</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
+        </div>
+      </div>
+      <button (click)="closeDeleteStudentModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6">
+      <div class="mb-4">
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          Are you sure you want to delete the student <br>
+          <strong class="text-red-600 dark:text-red-400">{{ selectedStudent?.FirstName }} {{ selectedStudent?.LastName }}</strong>?
+        </p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          This will permanently remove all student data including borrowing history, reservations, and account information.
+        </p>
+      </div>
+
+      <!-- Confirmation Input -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Type <strong>DELETE</strong> to confirm:
+        </label>
+        <input type="text"
+               [(ngModel)]="deleteConfirmation"
+               placeholder="Type DELETE here"
+               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:text-white">
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+      <button (click)="closeDeleteStudentModal()"
+        class="px-6 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200 font-medium">
+        Cancel
+      </button>
+      <button (click)="deleteStudent()"
+        [disabled]="isSubmitting || deleteConfirmation !== 'DELETE'"
+        class="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors duration-200 flex items-center font-medium shadow-lg">
+        <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ isSubmitting ? 'Deleting...' : 'Delete Student' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Block Student Modal -->
+<div *ngIf="showBlockStudentModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 modal-content">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4"
+          [class]="selectedStudent?.AccountStatus === 'Blocked' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
+          <svg class="w-6 h-6" [class]="selectedStudent?.AccountStatus === 'Blocked' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            {{ selectedStudent?.AccountStatus === 'Blocked' ? 'Unblock' : 'Block' }} Student
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {{ selectedStudent?.AccountStatus === 'Blocked' ? 'Restore' : 'Restrict' }} student account access
+          </p>
+        </div>
+      </div>
+      <button (click)="closeBlockStudentModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6" *ngIf="selectedStudent">
+      <div class="text-center">
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          Are you sure you want to {{ selectedStudent.AccountStatus === 'Blocked' ? 'unblock' : 'block' }}
+          <strong>{{ selectedStudent.FirstName }} {{ selectedStudent.LastName }}</strong>?
+        </p>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+          <div class="flex">
+            <svg class="w-5 h-5 text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <div class="text-sm text-yellow-800 dark:text-yellow-200">
+              <p class="font-medium">{{ selectedStudent.AccountStatus === 'Blocked' ? 'Unblocking' : 'Blocking' }} this student will:</p>
+              <ul class="mt-2 list-disc list-inside space-y-1">
+                <li *ngIf="selectedStudent.AccountStatus === 'Allowed'">Prevent them from accessing the library system</li>
+                <li *ngIf="selectedStudent.AccountStatus === 'Allowed'">Disable their borrowing privileges</li>
+                <li *ngIf="selectedStudent.AccountStatus === 'Blocked'">Restore their system access</li>
+                <li *ngIf="selectedStudent.AccountStatus === 'Blocked'">Reactivate their borrowing privileges</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+      <button
+        type="button"
+        (click)="closeBlockStudentModal()"
+        class="px-6 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200 font-medium"
+        [disabled]="isSubmitting">
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="toggleStudentBlock()"
+        class="px-6 py-2 text-white rounded-lg transition-colors duration-200 flex items-center font-medium shadow-lg"
+        [class]="selectedStudent?.AccountStatus === 'Blocked' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
+        [disabled]="isSubmitting">
+        <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ isSubmitting ? (selectedStudent?.AccountStatus === 'Blocked' ? 'Unblocking...' : 'Blocking...') : (selectedStudent?.AccountStatus === 'Blocked' ? 'Unblock Student' : 'Block Student') }}
       </button>
     </div>
   </div>

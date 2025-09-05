@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-contact',
@@ -11,6 +12,8 @@ import { CommonModule } from '@angular/common';
   styleUrl: './contact.css'
 })
 export class ContactComponent {
+
+  constructor(private toastService: ToastService) {}
   // Contact form data
   contactForm = {
     firstName: '',
@@ -65,7 +68,7 @@ export class ContactComponent {
     if (isValid) {
       // Handle form submission here
       console.log('Form submitted:', this.contactForm);
-      alert('Thank you for your message! We will get back to you soon.');
+      this.toastService.success('Thank you for your message!', 'We will get back to you soon.');
       
       // Reset form
       this.contactForm = {

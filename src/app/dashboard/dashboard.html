@@ -103,6 +103,18 @@
             </svg>
             Reservations
           </a>
+
+          <a (click)="onNavigate('archived-books'); closeMobileMenu()"
+            class="nav-link flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer"
+            [class]="isSectionActive('archived-books') ?
+               (isDarkMode ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700') :
+               (isDarkMode ? 'text-gray-300 hover:bg-blue-500 hover:text-white' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700')">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Archived Books
+          </a>
         </div>
 
         <!-- User Management Section -->
@@ -284,16 +296,21 @@
               </svg>
             </button>
             <!-- Notification Bell -->
-            <button (click)="onNotificationClick()" class="relative p-2 transition-colors duration-200"
-              [class]="isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'">
-              <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                </path>
-              </svg>
-              <span
-                class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white notification-badge"></span>
-            </button>
+            <div class="relative">
+              <button #notificationButton (click)="toggleNotificationDropdown()" class="relative p-2 transition-colors duration-200"
+                [class]="isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'">
+                <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                  </path>
+                </svg>
+                <!-- Red badge only shows when there are unread notifications -->
+                <span *ngIf="unreadNotificationCount > 0"
+                  class="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 text-xs font-bold text-white bg-red-500 rounded-full ring-2 ring-white">
+                  {{ unreadNotificationCount > 9 ? '9+' : unreadNotificationCount }}
+                </span>
+              </button>
+            </div>
             <!-- User Profile -->
             <div class="relative" #profileButton>
               <button (click)="onProfileClick()"
@@ -341,9 +358,8 @@
               <p class="text-blue-100" id="location">Cebu City</p>
             </div>
             <div class="text-right">
-              <svg class="w-12 h-12 text-yellow-300" fill="currentColor" viewBox="0 0 24 24" id="weather-icon">
-                <path
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              <svg class="w-14 h-14 text-yellow-400" fill="currentColor" viewBox="0 0 24 24" id="weather-icon">
+                <path d="M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5Z"/>
               </svg>
             </div>
           </div>
@@ -660,6 +676,78 @@
   </div>
 </div>
 
+<!-- Notification Dropdown Portal (Outside main container for proper z-index) -->
+<div *ngIf="showNotificationDropdown"
+     data-notification-dropdown
+     class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-[99999] w-80"
+     [style.top.px]="notificationDropdownPosition.top"
+     [style.right.px]="notificationDropdownPosition.right"
+     style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+  <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
+      <button *ngIf="unreadNotificationCount > 0"
+              (click)="markAllNotificationsAsRead()"
+              class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+        Mark all read
+      </button>
+    </div>
+  </div>
+
+  <div class="max-h-96 overflow-y-auto">
+    <!-- Real notifications -->
+    <div *ngIf="adminNotifications.length > 0" class="divide-y divide-gray-200 dark:divide-gray-700">
+      <div *ngFor="let notification of adminNotifications"
+           class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+           [ngClass]="{
+             'bg-blue-50': !notification.isRead && !isDarkMode,
+             'dark:bg-blue-900/20': !notification.isRead && isDarkMode
+           }"
+           (click)="markNotificationAsRead(notification.id)">
+        <div class="flex items-start space-x-3">
+          <!-- Notification icon -->
+          <div class="flex-shrink-0 mt-1">
+            <div class="w-2 h-2 rounded-full"
+                 [class]="!notification.isRead ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
+          </div>
+
+          <!-- Notification content -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium" [class]="getTextClasses()">{{ notification.title }}</p>
+            <p class="text-sm" [class]="getSecondaryTextClasses()">{{ notification.message }}</p>
+            <p class="text-xs mt-1" [class]="isDarkMode ? 'text-gray-400' : 'text-gray-500'">
+              {{ getTimeAgo(notification.timestamp) }}
+            </p>
+
+            <!-- Action buttons for borrow requests -->
+            <div *ngIf="notification.actionRequired && notification.type === 'borrow_request'"
+                 class="flex space-x-2 mt-2">
+              <button (click)="approveBorrowRequest(notification); $event.stopPropagation()"
+                      class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                Approve
+              </button>
+              <button (click)="denyBorrowRequest(notification); $event.stopPropagation()"
+                      class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                Deny
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="adminNotifications.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
+      <div class="mb-4">
+        <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+        </svg>
+      </div>
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">It's been quiet since...</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">All caught up! New notifications will appear here</p>
+    </div>
+  </div>
+
 <!-- Profile Modal -->
 <div *ngIf="showProfileModal"
   class="profile-modal fixed w-48 rounded-lg shadow-2xl border-2 transform transition-all duration-200 ease-out"
@@ -668,7 +756,7 @@
   style="z-index: 10000 !important;">
   <div class="py-2">
     <button (click)="viewProfile()"
-      class="w-full text-left px-4 py-3 text-sm font-medium transition-colors duration-200 flex items-center space-x-3 rounded-md mx-2"
+      class="w-full text-left px-4 py-3 text-sm font-medium transition-colors duration-200 flex items-center space-x-3"
       [class]="isDarkMode ? 'text-white hover:bg-blue-600 hover:text-white' : 'text-gray-800 hover:bg-blue-50 hover:text-blue-700'">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

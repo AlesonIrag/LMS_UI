@@ -151,7 +151,7 @@ export class StudentAuthService {
         if (response && response.success && response.data) {
           const student: Student = {
             studentId: response.data.StudentID,
-            fullName: response.data.FullName,
+            fullName: response.data.fullName,
             course: response.data.Course,
             yearLevel: response.data.YearLevel,
             section: response.data.Section,
@@ -336,7 +336,7 @@ export class StudentAuthService {
           // Update stored student data with fresh data from backend
           const updatedStudent: Student = {
             studentId: response.data.StudentID,
-            fullName: response.data.FullName,
+            fullName: response.data.fullName,
             course: response.data.Course,
             yearLevel: response.data.YearLevel,
             section: response.data.Section,

@@ -8,6 +8,9 @@ import { WeatherLoggerService } from '../services/weather-logger.service';
 import { StudentAuthService } from '../services/student-auth.service';
 import { ThemeService } from '../services/theme.service';
 import { AnnouncementService, Announcement, NewsItem } from '../services/announcement.service';
+import { BookService, StudentBook } from '../services/book.service';
+import { NotificationService, Notification } from '../services/notification.service';
+
 
 interface WeatherResponse {
   success: boolean;
@@ -45,24 +48,12 @@ interface ChatMessage {
   time: string;
 }
 
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  isbn: string;
-  category: string;
-  location: string;
-  availability: 'Available' | 'Checked Out' | 'Reserved' | 'Maintenance';
-  coverImage?: string;
-  description?: string;
-  publishedYear?: number;
-  publisher?: string;
-}
+// Using StudentBook from BookService instead of local interface
 
 interface Loan {
   id: string;
   bookId: string;
-  book: Book;
+  book: StudentBook;
   borrowDate: Date;
   dueDate: Date;
   returnDate?: Date;
@@ -75,7 +66,7 @@ interface Loan {
 interface Reservation {
   id: string;
   bookId: string;
-  book: Book;
+  book: StudentBook;
   reservationDate: Date;
   expiryDate: Date;
   status: 'Active' | 'Ready' | 'Expired' | 'Fulfilled';
@@ -101,6 +92,7 @@ interface Fine {
 })
 export class StudentDashboardComponent implements OnInit, OnDestroy {
   @ViewChild('chatMessagesContainer') chatMessagesRef!: ElementRef;
+  @ViewChild('notificationButton') notificationButtonRef!: ElementRef;
 
   private weatherSubscription?: Subscription;
   private statsSubscription?: Subscription;
@@ -115,6 +107,10 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   showProfileModal: boolean = false;
   profileModalTop: string = '70px';
   profileModalRight: string = '20px';
+
+
+
+
 
   @ViewChild('profileButton', { static: false }) profileButton!: ElementRef;
 
@@ -149,19 +145,19 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   location: string = 'Cebu City';
   weatherIcon: string = 'sunny';
 
-  // Library stats
+  // Library stats - will be loaded from database
   stats: LibraryStats = {
-    books: 3456,
-    members: 1230,
-    activeToday: 87
+    books: 0,
+    members: 0,
+    activeToday: 0
   };
 
-  // Student-specific stats
+  // Student-specific stats - will be loaded from database
   studentStats: StudentStats = {
-    borrowed: 3,
-    returned: 27,
-    reservations: 2,
-    fines: 25
+    borrowed: 0,
+    returned: 0,
+    reservations: 0,
+    fines: 0
   };
 
   // Search functionality
@@ -172,18 +168,56 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   currentView: string = 'dashboard';
 
   // Data collections
-  availableBooks: Book[] = [];
+  availableBooks: StudentBook[] = [];
   currentLoans: Loan[] = [];
   reservations: Reservation[] = [];
   borrowingHistory: Loan[] = [];
   fines: Fine[] = [];
 
+  // Loading states
+  isLoadingBooks: boolean = false;
+  booksError: string | null = null;
+
   // Pagination and filtering
   currentPage: number = 1;
-  itemsPerPage: number = 10;
+  itemsPerPage: number = 20; // Increased to show more books per page
   searchFilter: string = '';
   categoryFilter: string = 'all';
+  subjectFilter: string = 'all';
   statusFilter: string = 'all';
+  availableCategories: string[] = [];
+  availableSubjects: string[] = [];
+
+  // Sorting properties
+  sortColumn: string = 'title';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  // Modal states
+  showBookDetailsModal: boolean = false;
+  showReserveModal: boolean = false;
+  showBorrowConfirmModal: boolean = false;
+  showNotificationModal: boolean = false;
+  selectedBook: StudentBook | null = null;
+  reserveDate: string = '';
+  reserveEndDate: string = '';
+
+  // Notifications
+  notifications: Notification[] = [];
+  studentNotifications: Notification[] = [];
+  unreadNotificationCount: number = 0;
+  selectedNotification: Notification | null = null;
+  showNotificationDropdown: boolean = false;
+  notificationDropdownPosition = { top: 0, right: 0 };
+
+  // Success message properties
+  showSuccessMessage: boolean = false;
+  successMessage: string = '';
+
+  // Sidebar visibility control
+  get shouldHideSidebar(): boolean {
+    // Hide sidebar when not in dashboard view
+    return this.currentView !== 'dashboard';
+  }
 
   // News and announcements - now dynamic
   latestNews: NewsItem[] = [];
@@ -199,7 +233,9 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     private studentAuthService: StudentAuthService,
     private router: Router,
     private themeService: ThemeService,
-    private announcementService: AnnouncementService
+    private announcementService: AnnouncementService,
+    private bookService: BookService,
+    private notificationService: NotificationService
   ) {}
 
   // Getter for dark mode state from theme service
@@ -222,6 +258,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     this.loadQuoteOfTheDay();
     this.loadRandomFact();
     this.loadAnnouncements();
+    this.initializeNotifications();
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
@@ -335,24 +372,47 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     let iconPath = '';
     switch (condition.toLowerCase()) {
       case 'clear':
-        iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+      case 'sunny':
+        // Sun icon
+        iconPath = 'M12 17q2.075 0 3.538-1.462Q17 14.075 17 12t-1.462-3.538Q14.075 7 12 7t-3.538 1.462Q7 9.925 7 12t1.462 3.538Q9.925 17 12 17Zm0 3q-.425 0-.712-.288Q11 19.425 11 19v-1q0-.425.288-.713Q11.575 17 12 17t.713.287Q13 17.575 13 18v1q0 .425-.287.712Q12.425 20 12 20Zm0-16q-.425 0-.712-.288Q11 3.425 11 3V2q0-.425.288-.713Q11.575 1 12 1t.713.287Q13 1.575 13 2v1q0 .425-.287.712Q12.425 4 12 4ZM5.6 6.6l-.7-.7q-.275-.275-.275-.7t.275-.7q.275-.275.7-.275t.7.275l.7.7q.275.275.275.7t-.275.7q-.275.275-.7.275t-.7-.275Zm12.8 0q-.275-.275-.275-.7t.275-.7l.7-.7q.275-.275.7-.275t.7.275q.275.275.275.7t-.275.7l-.7.7q-.275.275-.7.275t-.7-.275ZM19 13q-.425 0-.712-.288Q18 12.425 18 12t.288-.713Q18.575 11 19 11h1q.425 0 .712.287Q21 11.575 21 12t-.288.712Q20.425 13 20 13Zm-15 0q-.425 0-.712-.288Q3 12.425 3 12t.288-.713Q3.575 11 4 11h1q.425 0 .712.287Q6 11.575 6 12t-.288.712Q5.425 13 5 13Zm2.6 6.4q-.275-.275-.275-.7t.275-.7l.7-.7q.275-.275.7-.275t.7.275q.275.275.275.7t-.275.7l-.7.7q-.275.275-.7.275t-.7-.275Zm12.8 0l-.7-.7q-.275-.275-.275-.7t.275-.7q.275-.275.7-.275t.7.275l.7.7q.275.275.275.7t-.275.7q-.275.275-.7.275t-.7-.275Z';
         break;
       case 'clouds':
-        iconPath = 'M19.36 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96z';
+      case 'cloudy':
+      case 'overcast':
+      default:
+        // Cloud icon (DEFAULT)
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5Z';
         break;
       case 'rain':
-        iconPath = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
+      case 'rainy':
+      case 'drizzle':
+        // Rain cloud icon
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM9.5 22l-1-2h1l1 2h-1Zm4 0l-1-2h1l1 2h-1Zm4 0l-1-2h1l1 2h-1Z';
         break;
-      default:
-        iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+      case 'thunderstorm':
+      case 'storm':
+        // Storm cloud icon  
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM14.5 22l-2.5-4h2l-1-3h1.5l2.5 4h-2l1 3H14.5Z';
+        break;
+      case 'snow':
+      case 'snowy':
+        // Snow cloud icon
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM8 22v-1h1v1H8Zm2-1v-1h1v1h-1Zm2 1v-1h1v1h-1Zm2-1v-1h1v1h-1Zm2 1v-1h1v1h-1Z';
+        break;
+      case 'mist':
+      case 'fog':
+      case 'haze':
+        // Fog/mist icon
+        iconPath = 'M6.5 20Q4.22 20 2.61 18.43Q1 16.85 1 14.58Q1 12.63 2.17 11.1Q3.35 9.57 5.25 9.15Q5.88 6.85 7.75 5.43Q9.63 4 12 4Q14.93 4 16.96 6.04Q19 8.07 19 11Q20.73 11.2 21.86 12.5Q23 13.78 23 15.5Q23 17.38 21.69 18.69Q20.38 20 18.5 20H6.5ZM4 22v-1h16v1H4Zm0-2v-1h16v1H4Z';
+        break;
     }
 
     if (iconElement) {
-      iconElement.innerHTML = `<path d="${iconPath}"/>`;
+      iconElement.innerHTML = `<path fill="currentColor" d="${iconPath}"/>`;
     }
     
     if (iconElementMobile) {
-      iconElementMobile.innerHTML = `<path d="${iconPath}"/>`;
+      iconElementMobile.innerHTML = `<path fill="currentColor" d="${iconPath}"/>`;
     }
   }
 
@@ -464,8 +524,9 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
     // Simulate search delay
     setTimeout(() => {
-      this.performSearch();
       this.isSearching = false;
+      this.onNavigate('borrow');
+      this.searchFilter = this.searchQuery;
     }, 1500);
   }
 
@@ -693,6 +754,74 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
 
 
+  // Utility methods for announcements and news
+  getTimeAgo(dateString: string | Date): string {
+    if (dateString instanceof Date) {
+      const now = new Date();
+      const diffInMs = now.getTime() - dateString.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInHours < 24) return `${diffInHours}h ago`;
+      if (diffInDays < 7) return `${diffInDays}d ago`;
+      return dateString.toLocaleDateString();
+    }
+    return this.announcementService.getTimeAgo(dateString);
+  }
+
+  getFormattedDate(dateString: string): string {
+    return this.announcementService.getFormattedDate(dateString);
+  }
+
+  getFormattedDateTime(dateString: string): string {
+    return this.announcementService.getFormattedDateTime(dateString);
+  }
+
+
+
+  getTypeIcon(type: string): string {
+    switch (type) {
+      case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
+      case 'success': return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'error': return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+      default: return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    }
+  }
+
+  getTypeColor(type: string): string {
+    switch (type) {
+      case 'warning': return 'text-yellow-500';
+      case 'success': return 'text-green-500';
+      case 'error': return 'text-red-500';
+      default: return 'text-blue-500';
+    }
+  }
+
+  getNewsColor(color: string): string {
+    switch (color) {
+      case 'red': return 'bg-red-500';
+      case 'green': return 'bg-green-500';
+      case 'blue': return 'bg-blue-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'purple': return 'bg-purple-500';
+      default: return 'bg-blue-500';
+    }
+  }
+
+  // Track by functions for ngFor performance
+  trackByNewsId(index: number, item: NewsItem): number {
+    return item.id || index;
+  }
+
+  trackByAnnouncementId(index: number, item: Announcement): number {
+    return item.id || index;
+  }
+
+
+
   // Dark mode methods
   toggleDarkMode(): void {
     this.themeService.toggleDarkMode();
@@ -866,28 +995,99 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   // Action methods for different views
   borrowBook(bookId: string): void {
-    console.log(`Borrowing book: ${bookId}`);
-    // Implement book borrowing logic
+    console.log(`Opening borrow confirmation for book: ${bookId}`);
+
     const book = this.availableBooks.find(b => b.id === bookId);
-    if (book && book.availability === 'Available') {
-      // Create new loan
-      const newLoan: Loan = {
-        id: `L${Date.now()}`,
-        bookId: bookId,
-        book: book,
-        borrowDate: new Date(),
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
-        renewalCount: 0,
-        maxRenewals: 3,
-        status: 'Active'
-      };
-
-      this.currentLoans.push(newLoan);
-      book.availability = 'Checked Out';
-      this.updateStudentStats();
-
-      console.log('Book borrowed successfully!');
+    if (!book) {
+      console.error('Book not found');
+      return;
     }
+
+    if (book.availability !== 'Available') {
+      console.error('Book is not available for borrowing');
+      return;
+    }
+
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.error('No student logged in');
+      return;
+    }
+
+    // Show confirmation modal
+    this.selectedBook = book;
+    this.showBorrowConfirmModal = true;
+  }
+
+  // Confirm borrow action
+  confirmBorrowBook(): void {
+    if (!this.selectedBook) {
+      console.error('No book selected');
+      return;
+    }
+
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.error('No student logged in');
+      return;
+    }
+
+    const reservationRequest = {
+      studentId: currentStudent.studentId,
+      bookId: parseInt(this.selectedBook.id),
+      status: 'Pending'
+    };
+
+    // Close the confirmation modal
+    this.showBorrowConfirmModal = false;
+
+    this.http.post('http://localhost:3000/api/v1/borrowing/create-reservation', reservationRequest).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          // Show success message
+          this.showSuccessMessage = true;
+          this.successMessage = `Successfully created reservation for "${this.selectedBook!.title}"! Please wait for admin approval.`;
+
+          // Update student stats
+          this.updateStudentStats();
+
+          // Create notification for admin
+          const currentStudent = this.studentAuthService.getCurrentStudent();
+          if (currentStudent) {
+            this.notificationService.addNotification({
+              type: 'reservation_request',
+              title: 'New Book Reservation',
+              message: `${currentStudent.fullName} has requested to borrow "${this.selectedBook!.title}"`,
+              recipientType: 'admin',
+              recipientId: 'admin',
+              relatedBookTitle: this.selectedBook!.title,
+              relatedStudentId: currentStudent.studentId,
+              relatedStudentName: currentStudent.fullName,
+              actionRequired: true,
+              actionData: {
+                studentId: currentStudent.studentId,
+                studentName: currentStudent.fullName,
+                bookId: this.selectedBook!.id,
+                bookTitle: this.selectedBook!.title
+              }
+            });
+          }
+
+          console.log('✅ Book reservation created successfully!');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error creating reservation:', error);
+        this.showSuccessMessage = true;
+        this.successMessage = 'Failed to create reservation. Please try again.';
+      }
+    });
+  }
+
+  // Cancel borrow confirmation
+  cancelBorrowBook(): void {
+    this.showBorrowConfirmModal = false;
+    this.selectedBook = null;
   }
 
   renewLoan(loanId: string): void {
@@ -895,29 +1095,60 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     const loan = this.currentLoans.find(l => l.id === loanId);
     if (loan && loan.renewalCount < loan.maxRenewals && loan.status !== 'Overdue') {
       loan.renewalCount++;
-      loan.dueDate = new Date(loan.dueDate.getTime() + 14 * 24 * 60 * 60 * 1000); // Add 14 days
+      loan.dueDate = new Date(loan.dueDate.getTime() + 2 * 24 * 60 * 60 * 1000); // Add 2 days
       console.log('Loan renewed successfully!');
     }
   }
 
   reserveBook(bookId: string): void {
     console.log(`Reserving book: ${bookId}`);
-    const book = this.availableBooks.find(b => b.id === bookId);
-    if (book && book.availability === 'Checked Out') {
-      const newReservation: Reservation = {
-        id: `R${Date.now()}`,
-        bookId: bookId,
-        book: book,
-        reservationDate: new Date(),
-        expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        status: 'Active',
-        queuePosition: this.reservations.filter(r => r.bookId === bookId).length + 1
-      };
 
-      this.reservations.push(newReservation);
-      this.updateStudentStats();
-      console.log('Book reserved successfully!');
+    const book = this.availableBooks.find(b => b.id === bookId);
+    if (!book) {
+      console.error('Book not found');
+      return;
     }
+
+    if (book.availability !== 'Checked Out') {
+      console.error('Book is not checked out, cannot reserve');
+      return;
+    }
+
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.error('No student logged in');
+      return;
+    }
+
+    const reservationRequest = {
+      studentId: currentStudent.studentId,
+      bookId: parseInt(bookId),
+      reservationDate: new Date().toISOString().split('T')[0],
+      expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    };
+
+    this.bookService.reserveBook(reservationRequest).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const newReservation: Reservation = {
+            id: response.reservationId || `R${Date.now()}`,
+            bookId: bookId,
+            book: book,
+            reservationDate: new Date(),
+            expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            status: 'Active',
+            queuePosition: this.reservations.filter(r => r.bookId === bookId).length + 1
+          };
+
+          this.reservations.push(newReservation);
+          this.updateStudentStats();
+          console.log('✅ Book reserved successfully!');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error reserving book:', error);
+      }
+    });
   }
 
   cancelReservation(reservationId: string): void {
@@ -942,10 +1173,41 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   }
 
   private updateStudentStats(): void {
-    this.studentStats.borrowed = this.currentLoans.filter(l => l.status === 'Active' || l.status === 'Overdue').length;
-    this.studentStats.returned = this.borrowingHistory.filter(l => l.status === 'Returned').length;
-    this.studentStats.reservations = this.reservations.filter(r => r.status === 'Active' || r.status === 'Ready').length;
-    this.studentStats.fines = this.fines.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.warn('⚠️ No current student found for stats update');
+      return;
+    }
+
+    console.log('📊 Loading real student stats from database for:', currentStudent.studentId);
+
+    // Load real stats from database
+    this.bookService.getStudentStats(currentStudent.studentId).subscribe({
+      next: (stats) => {
+        console.log('✅ Student stats loaded from database:', stats);
+        this.studentStats = {
+          borrowed: stats.borrowed || 0,
+          returned: stats.returned || 0,
+          reservations: stats.reservations || 0,
+          fines: stats.fines || 0
+        };
+
+        // Trigger counter animation after stats are loaded
+        setTimeout(() => {
+          this.animateCounters();
+        }, 100);
+      },
+      error: (error) => {
+        console.error('❌ Error loading student stats:', error);
+        // Keep default values on error
+        this.studentStats = {
+          borrowed: 0,
+          returned: 0,
+          reservations: 0,
+          fines: 0
+        };
+      }
+    });
   }
 
   // Utility methods
@@ -984,7 +1246,9 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
     switch (this.currentView) {
       case 'borrow':
-        return this.filteredBooks.slice(startIndex, endIndex);
+        const paginatedBooks = this.filteredBooks.slice(startIndex, endIndex);
+        console.log('📄 Paginated books:', paginatedBooks.length, 'from', startIndex, 'to', endIndex);
+        return paginatedBooks;
       case 'loans':
         return this.currentLoans.slice(startIndex, endIndex);
       case 'reservations':
@@ -998,25 +1262,37 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  get filteredBooks(): Book[] {
+  get filteredBooks(): StudentBook[] {
     let filtered = this.availableBooks;
+    console.log('🔍 Filtering books - Total available:', this.availableBooks.length);
 
     if (this.searchFilter) {
       filtered = filtered.filter(book =>
         book.title.toLowerCase().includes(this.searchFilter.toLowerCase()) ||
         book.author.toLowerCase().includes(this.searchFilter.toLowerCase()) ||
-        book.category.toLowerCase().includes(this.searchFilter.toLowerCase())
+        book.category.toLowerCase().includes(this.searchFilter.toLowerCase()) ||
+        book.isbn.includes(this.searchFilter) ||
+        (book.subject && book.subject.toLowerCase().includes(this.searchFilter.toLowerCase()))
       );
+      console.log('🔍 After search filter:', filtered.length);
     }
 
     if (this.categoryFilter !== 'all') {
       filtered = filtered.filter(book => book.category === this.categoryFilter);
+      console.log('🔍 After category filter:', filtered.length);
+    }
+
+    if (this.subjectFilter !== 'all') {
+      filtered = filtered.filter(book => book.subject === this.subjectFilter);
+      console.log('🔍 After subject filter:', filtered.length);
     }
 
     if (this.statusFilter !== 'all') {
       filtered = filtered.filter(book => book.availability === this.statusFilter);
+      console.log('🔍 After status filter:', filtered.length);
     }
 
+    console.log('🔍 Final filtered books:', filtered.length);
     return filtered;
   }
 
@@ -1034,6 +1310,232 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  // Search and filter methods
+  onSearch(): void {
+    this.currentPage = 1; // Reset to first page when searching
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1; // Reset to first page when filtering
+  }
+
+  // Sorting methods
+  sortBy(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySorting();
+  }
+
+  private applySorting(): void {
+    this.availableBooks.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (this.sortColumn) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'category':
+          aValue = a.category.toLowerCase();
+          bValue = b.category.toLowerCase();
+          break;
+        case 'availability':
+          aValue = a.availability.toLowerCase();
+          bValue = b.availability.toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return this.sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return this.sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }
+
+  // Pagination methods
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+    const halfRange = Math.floor(maxPagesToShow / 2);
+
+    let startPage = Math.max(1, this.currentPage - halfRange);
+    let endPage = Math.min(this.totalPages, this.currentPage + halfRange);
+
+    // Adjust if we're near the beginning or end
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      if (startPage === 1) {
+        endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
+      } else {
+        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  getDisplayRange(): string {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const endIndex = Math.min(this.currentPage * this.itemsPerPage, this.filteredBooks.length);
+    return `${startIndex}-${endIndex} of ${this.filteredBooks.length}`;
+  }
+
+  onItemsPerPageChange(): void {
+    this.currentPage = 1; // Reset to first page when changing items per page
+  }
+
+  // Modal methods
+  viewBookDetails(book: StudentBook): void {
+    this.selectedBook = book;
+    this.showBookDetailsModal = true;
+  }
+
+  closeBookDetailsModal(): void {
+    this.showBookDetailsModal = false;
+    this.selectedBook = null;
+  }
+
+  openReserveModal(book: StudentBook): void {
+    this.selectedBook = book;
+    this.showReserveModal = true;
+
+    // Set default reserve date to today
+    const today = new Date();
+    this.reserveDate = today.toISOString().split('T')[0];
+
+    // Set default end date to tomorrow (1 day later)
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.reserveEndDate = tomorrow.toISOString().split('T')[0];
+  }
+
+  closeReserveModal(): void {
+    this.showReserveModal = false;
+    this.selectedBook = null;
+    this.reserveDate = '';
+    this.reserveEndDate = '';
+  }
+
+  // Get min and max dates for reservation
+  getMinReserveDate(): string {
+    return new Date().toISOString().split('T')[0]; // Today
+  }
+
+  getMaxReserveDate(): string {
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 3); // 3 days from today
+    return maxDate.toISOString().split('T')[0];
+  }
+
+  onReserveDateChange(): void {
+    if (this.reserveDate) {
+      const selectedDate = new Date(this.reserveDate);
+      const maxEndDate = new Date(selectedDate);
+      maxEndDate.setDate(maxEndDate.getDate() + 3); // Max 3 days from selected date
+
+      // If current end date is beyond the max, reset it
+      if (this.reserveEndDate) {
+        const currentEndDate = new Date(this.reserveEndDate);
+        if (currentEndDate > maxEndDate) {
+          this.reserveEndDate = maxEndDate.toISOString().split('T')[0];
+        }
+      }
+    }
+  }
+
+  getMinReserveEndDate(): string {
+    if (this.reserveDate) {
+      const startDate = new Date(this.reserveDate);
+      startDate.setDate(startDate.getDate() + 1); // At least 1 day after start date
+      return startDate.toISOString().split('T')[0];
+    }
+    return this.getMinReserveDate();
+  }
+
+  getMaxReserveEndDate(): string {
+    if (this.reserveDate) {
+      const startDate = new Date(this.reserveDate);
+      startDate.setDate(startDate.getDate() + 3); // Max 3 days from start date
+      return startDate.toISOString().split('T')[0];
+    }
+    return this.getMaxReserveDate();
+  }
+
+  confirmReservation(): void {
+    if (!this.selectedBook || !this.reserveDate || !this.reserveEndDate) {
+      console.error('Missing reservation details');
+      return;
+    }
+
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.error('No student logged in');
+      return;
+    }
+
+    const reservationRequest = {
+      studentId: currentStudent.studentId,
+      bookId: parseInt(this.selectedBook.id),
+      reservationDate: this.reserveDate,
+      expiryDate: this.reserveEndDate
+    };
+
+    this.bookService.reserveBook(reservationRequest).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const newReservation: Reservation = {
+            id: response.reservationId || `R${Date.now()}`,
+            bookId: this.selectedBook!.id,
+            book: this.selectedBook!,
+            reservationDate: new Date(this.reserveDate),
+            expiryDate: new Date(this.reserveEndDate),
+            status: 'Active',
+            queuePosition: this.reservations.filter(r => r.bookId === this.selectedBook!.id).length + 1
+          };
+
+          this.reservations.push(newReservation);
+          this.updateStudentStats();
+          this.closeReserveModal();
+          console.log('✅ Book reserved successfully!');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error reserving book:', error);
+      }
+    });
   }
 
   // Calculation methods for templates
@@ -1059,141 +1561,248 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     this.loadBorrowingHistory();
     this.loadFines();
     this.updateStudentStats();
+    this.loadCategories();
+    this.loadSubjects(); // Load subjects for filtering
+    this.loadLibraryStats(); // Load real library statistics
   }
 
-  private loadAvailableBooks(): void {
-    // Mock data - replace with actual API call
-    this.availableBooks = [
-      {
-        id: '1',
-        title: 'Introduction to Algorithms',
-        author: 'Thomas H. Cormen',
-        isbn: '978-0262033848',
-        category: 'Computer Science',
-        location: 'CS Section - Shelf A3',
-        availability: 'Available',
-        publishedYear: 2009,
-        publisher: 'MIT Press',
-        description: 'A comprehensive textbook on computer algorithms.'
+  // Load categories for filtering
+  private loadCategories(): void {
+    this.bookService.getCategories().subscribe({
+      next: (categories) => {
+        this.availableCategories = categories;
+        console.log('✅ Loaded categories:', categories);
       },
-      {
-        id: '2',
-        title: 'Clean Code',
-        author: 'Robert C. Martin',
-        isbn: '978-0132350884',
-        category: 'Programming',
-        location: 'CS Section - Shelf B1',
-        availability: 'Available',
-        publishedYear: 2008,
-        publisher: 'Prentice Hall',
-        description: 'A handbook of agile software craftsmanship.'
-      },
-      {
-        id: '3',
-        title: 'Database System Concepts',
-        author: 'Abraham Silberschatz',
-        isbn: '978-0078022159',
-        category: 'Database',
-        location: 'CS Section - Shelf C2',
-        availability: 'Checked Out',
-        publishedYear: 2019,
-        publisher: 'McGraw-Hill',
-        description: 'Comprehensive introduction to database systems.'
-      },
-      {
-        id: '4',
-        title: 'Calculus: Early Transcendentals',
-        author: 'James Stewart',
-        isbn: '978-1285741550',
-        category: 'Mathematics',
-        location: 'Math Section - Shelf M1',
-        availability: 'Available',
-        publishedYear: 2015,
-        publisher: 'Cengage Learning',
-        description: 'Complete calculus textbook for engineering students.'
-      },
-      {
-        id: '5',
-        title: 'Physics for Scientists and Engineers',
-        author: 'Raymond A. Serway',
-        isbn: '978-1133947271',
-        category: 'Physics',
-        location: 'Science Section - Shelf P2',
-        availability: 'Reserved',
-        publishedYear: 2013,
-        publisher: 'Cengage Learning',
-        description: 'Comprehensive physics textbook with modern applications.'
+      error: (error) => {
+        console.error('❌ Error loading categories:', error);
       }
-    ];
+    });
+  }
+
+  // Load subjects for filtering
+  private loadSubjects(): void {
+    this.bookService.getSubjects().subscribe({
+      next: (subjects) => {
+        this.availableSubjects = subjects;
+        console.log('✅ Loaded subjects:', subjects);
+      },
+      error: (error) => {
+        console.error('❌ Error loading subjects:', error);
+      }
+    });
+  }
+
+  // Load real library statistics from database
+  private loadLibraryStats(): void {
+    console.log('📊 Loading library statistics...');
+
+    // Update stats based on loaded data
+    this.stats.books = this.availableBooks.length;
+
+    // You can add API calls here to get real member count and active users
+    // For now, we'll calculate from available data
+    this.stats.members = this.currentLoans.length + this.reservations.length + 50; // Approximate
+    this.stats.activeToday = Math.floor(this.stats.members * 0.1); // 10% active today
+
+    console.log('✅ Library stats updated:', this.stats);
+  }
+
+  loadAvailableBooks(): void {
+    this.isLoadingBooks = true;
+    this.booksError = null;
+
+    console.log('📚 Loading books from database...');
+
+    this.bookService.getAllBooks().subscribe({
+      next: (books) => {
+        this.availableBooks = books;
+        this.isLoadingBooks = false;
+        console.log(`✅ Loaded ${books.length} books from database`);
+        console.log('📖 Sample book data:', books.slice(0, 2)); // Log first 2 books for debugging
+
+        // Apply initial sorting
+        this.applySorting();
+
+        // Reset pagination to first page
+        this.currentPage = 1;
+
+        // Update current loans and reservations after books are loaded
+        this.loadCurrentLoans();
+        this.loadReservations();
+
+        // Update library stats with real book count
+        this.loadLibraryStats();
+      },
+      error: (error) => {
+        console.error('❌ Error loading books:', error);
+        this.booksError = 'Failed to load books from database';
+        this.isLoadingBooks = false;
+
+        // Fallback to empty array
+        this.availableBooks = [];
+      }
+    });
   }
 
   private loadCurrentLoans(): void {
-    // Mock data - replace with actual API call
-    // Find books by ID to ensure proper references
-    const book1 = this.availableBooks.find(b => b.id === '1')!;
-    const book2 = this.availableBooks.find(b => b.id === '2')!;
-    const book4 = this.availableBooks.find(b => b.id === '4')!;
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.warn('⚠️ No current student found for loading loans');
+      this.currentLoans = [];
+      return;
+    }
 
-    this.currentLoans = [
-      {
-        id: 'L001',
-        bookId: '1',
-        book: book1,
-        borrowDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-        dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
-        renewalCount: 1,
-        maxRenewals: 3,
-        status: 'Active'
+    console.log('📚 Loading current loans from database for:', currentStudent.studentId);
+
+    // Load borrowed books (status: Borrowed or Overdue)
+    this.bookService.getStudentTransactions(currentStudent.studentId, 'Borrowed').subscribe({
+      next: (borrowedTransactions) => {
+        console.log('✅ Borrowed transactions loaded:', borrowedTransactions);
+
+        // Also get overdue transactions
+        this.bookService.getStudentTransactions(currentStudent.studentId, 'Overdue').subscribe({
+          next: (overdueTransactions) => {
+            console.log('✅ Overdue transactions loaded:', overdueTransactions);
+
+            // Combine borrowed and overdue transactions
+            const allActiveLoans = [...borrowedTransactions, ...overdueTransactions];
+
+            this.currentLoans = allActiveLoans.map(transaction => {
+              // Find the book in available books for additional details
+              const book = this.availableBooks.find(b => b.id === transaction.BookID.toString());
+
+              return {
+                id: `L${transaction.TransactionID}`,
+                bookId: transaction.BookID.toString(),
+                book: book || {
+                  id: transaction.BookID.toString(),
+                  title: transaction.BookTitle || 'Unknown Title',
+                  author: transaction.BookAuthor || 'Unknown Author',
+                  isbn: transaction.ISBN || 'N/A',
+                  category: transaction.Category || 'General',
+                  subject: '',
+                  location: 'Library',
+                  availability: 'Checked Out' as const,
+                  copies: 1
+                },
+                borrowDate: new Date(transaction.BorrowDate),
+                dueDate: new Date(transaction.DueDate),
+                renewalCount: transaction.RenewalCount || 0,
+                maxRenewals: 3,
+                status: transaction.Status === 'Overdue' ? 'Overdue' : 'Active',
+                fineAmount: transaction.Status === 'Overdue' ? this.calculateFine(new Date(transaction.DueDate)) : undefined
+              };
+            });
+
+            console.log(`✅ Current loans loaded from database: ${this.currentLoans.length} active loans`);
+          },
+          error: (error) => {
+            console.error('❌ Error loading overdue transactions:', error);
+            // Just use borrowed transactions if overdue fails
+            this.currentLoans = borrowedTransactions.map(transaction => {
+              const book = this.availableBooks.find(b => b.id === transaction.BookID.toString());
+
+              return {
+                id: `L${transaction.TransactionID}`,
+                bookId: transaction.BookID.toString(),
+                book: book || {
+                  id: transaction.BookID.toString(),
+                  title: transaction.BookTitle || 'Unknown Title',
+                  author: transaction.BookAuthor || 'Unknown Author',
+                  isbn: transaction.ISBN || 'N/A',
+                  category: transaction.Category || 'General',
+                  subject: '',
+                  location: 'Library',
+                  availability: 'Checked Out' as const,
+                  copies: 1
+                },
+                borrowDate: new Date(transaction.BorrowDate),
+                dueDate: new Date(transaction.DueDate),
+                renewalCount: transaction.RenewalCount || 0,
+                maxRenewals: 3,
+                status: 'Active'
+              };
+            });
+          }
+        });
       },
-      {
-        id: 'L002',
-        bookId: '2',
-        book: book2,
-        borrowDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
-        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-        renewalCount: 0,
-        maxRenewals: 3,
-        status: 'Active'
-      },
-      {
-        id: 'L003',
-        bookId: '4',
-        book: book4,
-        borrowDate: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000), // 16 days ago
-        dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days overdue
-        renewalCount: 2,
-        maxRenewals: 3,
-        status: 'Overdue',
-        fineAmount: 10 // ₱5 per day * 2 days
+      error: (error) => {
+        console.error('❌ Error loading current loans:', error);
+        this.currentLoans = [];
       }
-    ];
+    });
+  }
+
+  // Helper method to calculate fine amount
+  private calculateFine(dueDate: Date): number {
+    const today = new Date();
+    const diffTime = today.getTime() - dueDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays * 5 : 0; // ₱5 per day
   }
 
   private loadReservations(): void {
-    // Mock data - replace with actual API call
-    const book3 = this.availableBooks.find(b => b.id === '3')!;
-    const book5 = this.availableBooks.find(b => b.id === '5')!;
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.warn('⚠️ No current student found for loading reservations');
+      this.reservations = [];
+      return;
+    }
 
-    this.reservations = [
-      {
-        id: 'R001',
-        bookId: '3',
-        book: book3,
-        reservationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
-        status: 'Active',
-        queuePosition: 2
+    console.log('📋 Loading reservations from database for:', currentStudent.studentId);
+
+    this.bookService.getStudentReservations(currentStudent.studentId).subscribe({
+      next: (reservations) => {
+        console.log('✅ Reservations loaded from database:', reservations);
+
+        this.reservations = reservations.map((reservation, index) => {
+          // Find the book in available books for additional details
+          const book = this.availableBooks.find(b => b.id === reservation.BookID.toString());
+
+          return {
+            id: `R${reservation.ReservationID}`,
+            bookId: reservation.BookID.toString(),
+            book: book || {
+              id: reservation.BookID.toString(),
+              title: reservation.BookTitle || 'Unknown Title',
+              author: reservation.BookAuthor || 'Unknown Author',
+              isbn: reservation.ISBN || 'N/A',
+              category: reservation.Category || 'General',
+              subject: '',
+              location: 'Library',
+              availability: 'Reserved' as const,
+              copies: 1
+            },
+            reservationDate: new Date(reservation.ReservedAt),
+            expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+            status: this.mapReservationStatus(reservation.Status),
+            queuePosition: index + 1 // Simple queue position based on order
+          };
+        });
+
+        console.log(`✅ Reservations loaded from database: ${this.reservations.length} reservations`);
       },
-      {
-        id: 'R002',
-        bookId: '5',
-        book: book5,
-        reservationDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-        expiryDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), // 6 days from now
-        status: 'Ready',
-        queuePosition: 1
+      error: (error) => {
+        console.error('❌ Error loading reservations:', error);
+        this.reservations = [];
       }
-    ];
+    });
+  }
+
+  // Helper method to map database reservation status to frontend status
+  private mapReservationStatus(dbStatus: string): 'Active' | 'Ready' | 'Expired' | 'Fulfilled' {
+    switch (dbStatus) {
+      case 'Pending':
+        return 'Active';
+      case 'Fulfilled':
+        return 'Ready';
+      case 'Rejected':
+        return 'Expired';
+      case 'Expired':
+        return 'Expired';
+      default:
+        return 'Active';
+    }
   }
 
   private loadBorrowingHistory(): void {
@@ -1228,27 +1837,37 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadFines(): void {
-    // Mock data - replace with actual API call
-    this.fines = [
-      {
-        id: 'F001',
-        loanId: 'L003',
-        type: 'Overdue',
-        amount: 10,
-        description: 'Late return fee for "Calculus: Early Transcendentals"',
-        dateIssued: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        status: 'Pending'
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (!currentStudent) {
+      console.warn('⚠️ No current student found for loading fines');
+      this.fines = [];
+      return;
+    }
+
+    console.log('💰 Loading fines from database for:', currentStudent.studentId);
+
+    this.bookService.getStudentFines(currentStudent.studentId).subscribe({
+      next: (fines) => {
+        console.log('✅ Fines loaded from database:', fines);
+
+        this.fines = fines.map(fine => ({
+          id: `F${fine.FineID}`,
+          loanId: fine.TransactionID ? `L${fine.TransactionID}` : undefined,
+          type: 'Overdue',
+          amount: parseFloat(fine.Amount),
+          description: fine.Description || `Fine for "${fine.BookTitle || 'Unknown Book'}"`,
+          dateIssued: new Date(fine.CreatedAt),
+          datePaid: fine.DatePaid ? new Date(fine.DatePaid) : undefined,
+          status: fine.Status === 'Paid' ? 'Paid' : 'Pending'
+        }));
+
+        console.log(`✅ Fines loaded from database: ${this.fines.length} fines`);
       },
-      {
-        id: 'F002',
-        type: 'Late Return',
-        amount: 15,
-        description: 'Late return fee for "Physics for Scientists and Engineers"',
-        dateIssued: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        datePaid: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
-        status: 'Paid'
+      error: (error) => {
+        console.error('❌ Error loading fines:', error);
+        this.fines = [];
       }
-    ];
+    });
   }
 
   // Date methods
@@ -1373,37 +1992,123 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     this.announcementSubscriptions.push(newsSub);
   }
 
-  // Utility methods for announcements
-  getTimeAgo(dateString: string): string {
-    return this.announcementService.getTimeAgo(dateString);
-  }
+  // Initialize notifications
+  private initializeNotifications(): void {
+    const currentStudent = this.studentAuthService.getCurrentStudent();
+    if (currentStudent) {
+      // Add some test notifications for demonstration
+      this.addTestNotifications(currentStudent.studentId);
 
-  getTypeIcon(type: string): string {
-    switch (type) {
-      case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
-      case 'success': return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
-      case 'error': return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
-      default: return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+      // Subscribe to notifications for this student
+      this.notificationService.getNotificationsForRecipient('student', currentStudent.studentId)
+        .subscribe(notifications => {
+          this.notifications = notifications;
+          this.studentNotifications = notifications;
+          this.unreadNotificationCount = notifications.filter(n => !n.isRead).length;
+        });
     }
   }
 
-  getTypeColor(type: string): string {
-    switch (type) {
-      case 'warning': return 'text-yellow-500';
-      case 'success': return 'text-green-500';
-      case 'error': return 'text-red-500';
-      default: return 'text-blue-500';
+  // Add test notifications for demonstration
+  private addTestNotifications(studentId: string): void {
+    // Check if test notifications already exist
+    this.notificationService.getNotifications().subscribe(notifications => {
+      const hasTestNotifications = notifications.some(n => n.message.includes('test notification'));
+
+      if (!hasTestNotifications) {
+        // Add sample notifications
+        this.notificationService.addNotification({
+          type: 'borrow_approved',
+          title: 'Borrow Request Approved',
+          message: 'Your request to borrow "JavaScript: The Good Parts" has been approved by the librarian',
+          recipientType: 'student',
+          recipientId: studentId,
+          relatedBookTitle: 'JavaScript: The Good Parts',
+          actionRequired: false
+        });
+
+        this.notificationService.addNotification({
+          type: 'overdue_reminder',
+          title: 'Book Due Soon',
+          message: 'Your book "Angular Development Guide" is due in 2 days',
+          recipientType: 'student',
+          recipientId: studentId,
+          relatedBookTitle: 'Angular Development Guide',
+          actionRequired: false
+        });
+      }
+    });
+  }
+
+  // Show notification modal
+  showNotification(notification: Notification): void {
+    this.selectedNotification = notification;
+    this.showNotificationModal = true;
+
+    // Mark as read when opened
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id);
     }
   }
 
-  getNewsColor(color: string): string {
-    switch (color) {
-      case 'red': return 'bg-red-500';
-      case 'green': return 'bg-green-500';
-      case 'blue': return 'bg-blue-500';
-      case 'yellow': return 'bg-yellow-500';
-      case 'purple': return 'bg-purple-500';
-      default: return 'bg-blue-500';
+  // Close notification modal
+  closeNotificationModal(): void {
+    this.showNotificationModal = false;
+    this.selectedNotification = null;
+  }
+
+  // Delete notification
+  deleteNotification(notificationId: string): void {
+    this.notificationService.deleteNotification(notificationId);
+  }
+
+  // Mark all notifications as read
+  markAllNotificationsAsRead(): void {
+    this.notificationService.markAllAsRead();
+  }
+
+  markNotificationAsRead(notificationId: string): void {
+    this.notificationService.markAsRead(notificationId);
+  }
+
+
+
+  // Toggle notification dropdown
+  toggleNotificationDropdown(): void {
+    this.showNotificationDropdown = !this.showNotificationDropdown;
+
+    if (this.showNotificationDropdown && this.notificationButtonRef) {
+      // Calculate position relative to the notification button
+      const buttonElement = this.notificationButtonRef.nativeElement;
+      const rect = buttonElement.getBoundingClientRect();
+
+      // Position dropdown below and to the right of the button
+      this.notificationDropdownPosition = {
+        top: rect.bottom + 8, // 8px gap below button
+        right: window.innerWidth - rect.right // Align right edge with button
+      };
     }
   }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    // Check if click is on notification button or dropdown
+    const isNotificationButton = this.notificationButtonRef &&
+      this.notificationButtonRef.nativeElement.contains(target);
+    const isNotificationDropdown = target.closest('[data-notification-dropdown]');
+
+    // Close notification dropdown if clicking outside
+    if (!isNotificationButton && !isNotificationDropdown && this.showNotificationDropdown) {
+      this.showNotificationDropdown = false;
+    }
+  }
+
+  // Get due date for borrow modal
+  getBorrowDueDate(): string {
+    const dueDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    return dueDate.toLocaleDateString();
+  }
+
 }

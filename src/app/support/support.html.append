@@ -1,0 +1,11 @@
+          <div class="text-gray-400 mb-4 xl:mb-0 text-center xl:text-left">
+            &copy; <span id="creditYearRange">2025-2026</span> Benedicto College Library Management System. All Rights Reserved.
+          </div>
+          <div class="text-gray-400 text-sm text-center xl:text-right">
+            Your Education… Our Mission
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
