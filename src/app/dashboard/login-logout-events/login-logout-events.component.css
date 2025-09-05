@@ -1,0 +1,88 @@
+/* Login Logout Events Component Styles */
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Ensure proper spacing and layout */
+.container {
+  width: 100%;
+}
+
+/* Stats cards responsive grid */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* On mobile, single column */
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Table responsive behavior */
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+/* Action badges */
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.border {
+  border-width: 1px;
+}
+
+/* Loading spinner animation */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hover effects */
+.hover\:bg-opacity-5:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode specific adjustments */
+.dark .hover\:bg-opacity-5:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Transition effects */
+.transition-colors {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+.duration-200 {
+  transition-duration: 200ms;
+}
+
+.duration-150 {
+  transition-duration: 150ms;
+}
