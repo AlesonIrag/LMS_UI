@@ -1,4 +1,30 @@
 /* Contact page specific styles */
+
+/* Header SVG icon styles */
+header svg {
+  stroke: #000000 !important; /* BLACK color */
+  stroke-width: 2 !important;
+  fill: none !important;
+  color: #000000 !important;
+}
+
+/* Header SVG icon hover effects */
+.group:hover svg {
+  stroke: #fb923c !important; /* Orange-400 color */
+  transform: scale(1.1);
+}
+
+/* SVG transition effects */
+header .group svg {
+  transition: all 0.3s ease;
+}
+
+/* Mobile: Hide desktop navigation links */
+@media (max-width: 768px) {
+  header .group {
+    display: none !important;
+  }
+}
 .contact-container {
   max-width: 1200px;
   margin: 0 auto;

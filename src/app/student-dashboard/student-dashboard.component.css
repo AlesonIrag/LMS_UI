@@ -139,6 +139,13 @@
   }
 }
 
+/* Sidebar fixed height and layout */
+aside.w-64 {
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
 /* Mobile responsive design */
 @media (max-width: 1023px) {
   /* Make left sidebar mobile-friendly */
@@ -160,6 +167,14 @@
   /* Hide right sidebar on mobile */
   .right-sidebar {
     display: none;
+  }
+
+  /* Right Sidebar - Fixed positioning for consistent layout */
+  .right-sidebar {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
   }
 
   /* Adjust main content for mobile */
@@ -207,10 +222,22 @@
     display: none;
   }
 
-  /* Ensure sidebar is visible on desktop */
+  /* Ensure left sidebar is visible on desktop */
   aside.w-64 {
-    position: relative;
+    position: sticky;
+    top: 0;
+    height: 100vh;
     transform: translateX(0) !important;
+  }
+
+  /* Ensure right sidebar is visible on desktop */
+  .right-sidebar {
+    display: flex !important;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
   }
 }
 
@@ -363,6 +390,7 @@ button:focus {
   .mobile-stack {
     flex-direction: column;
   }
+  
 }
 
 /* Dark mode specific adjustments */

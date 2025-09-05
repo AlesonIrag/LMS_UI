@@ -10,6 +10,16 @@ export interface AdminUser {
   email: string;
   role: string;
   status: string;
+  phoneNumber?: string;
+  profilePhoto?: string;
+}
+
+export interface ProfileUpdateData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  profilePhoto?: string;
 }
 
 export interface LoginResponse {
@@ -93,7 +103,8 @@ export class AuthService {
             fullName: adminData.FullName,
             email: adminData.Email,
             role: adminData.Role,
-            status: adminData.Status
+            status: adminData.Status,
+            profilePhoto: adminData.ProfilePhoto || ''
           };
 
           console.log('👤 Mapped admin object:', admin);
@@ -247,6 +258,112 @@ export class AuthService {
         console.error('❌ Admin session validation error:', error);
         this.logout();
         return of(false);
+      })
+    );
+  }
+
+  /**
+   * Update admin profile information
+   */
+  updateProfile(profileData: ProfileUpdateData): Observable<boolean> {
+    const currentAdmin = this.getCurrentAdmin();
+    if (!currentAdmin) {
+      return of(false);
+    }
+
+    // Send update to backend
+    const updateData = {
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      email: profileData.email,
+      phoneNumber: profileData.phoneNumber,
+      profilePhoto: profileData.profilePhoto
+    };
+
+    return this.apiService.updateAdminProfile(currentAdmin.adminId.toString(), updateData).pipe(
+      map((response: any) => {
+        if (response && response.success) {
+          // Update localStorage with new data
+          const updatedAdmin: AdminUser = {
+            ...currentAdmin,
+            fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
+            email: profileData.email,
+            phoneNumber: profileData.phoneNumber,
+            profilePhoto: profileData.profilePhoto
+          };
+
+          localStorage.setItem('currentAdmin', JSON.stringify(updatedAdmin));
+          this.currentAdminSubject.next(updatedAdmin);
+          console.log('✅ Admin profile updated:', updatedAdmin);
+          return true;
+        }
+        return false;
+      }),
+      catchError((error) => {
+        console.error('Error updating admin profile:', error);
+        return of(false);
+      })
+    );
+  }
+
+  /**
+   * Get admin profile with additional details
+   */
+  getProfileDetails(): Observable<AdminUser | null> {
+    const currentAdmin = this.getCurrentAdmin();
+    if (!currentAdmin) {
+      return of(null);
+    }
+
+    // Fetch fresh data from backend
+    return this.apiService.getAdminProfile(currentAdmin.adminId.toString()).pipe(
+      map((response: any) => {
+        if (response && response.success && response.data) {
+          const adminData = response.data;
+          const updatedAdmin: AdminUser = {
+            adminId: adminData.AdminID,
+            fullName: adminData.FullName || `${adminData.FirstName} ${adminData.LastName}`.trim(),
+            email: adminData.Email,
+            role: adminData.Role,
+            status: adminData.Status,
+            phoneNumber: adminData.PhoneNumber || '',
+            profilePhoto: adminData.ProfilePhoto || this.getDefaultProfilePhoto(adminData.FirstName || 'A')
+          };
+
+          // Update localStorage with fresh data
+          localStorage.setItem('currentAdmin', JSON.stringify(updatedAdmin));
+          return updatedAdmin;
+        }
+        return currentAdmin; // Fallback to cached data
+      }),
+      catchError((error) => {
+        console.error('Error fetching admin profile:', error);
+        return of(currentAdmin); // Fallback to cached data on error
+      })
+    );
+  }
+
+  private getDefaultProfilePhoto(firstName: string): string {
+    const initial = firstName.charAt(0).toUpperCase() || 'A';
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%233B82F6'/%3E%3Ctext x='60' y='75' text-anchor='middle' fill='white' font-family='Arial' font-size='48' font-weight='bold'%3E${initial}%3C/text%3E%3C/svg%3E`;
+  }
+
+  /**
+   * Upload profile photo
+   */
+  uploadProfilePhoto(file: File): Observable<string | null> {
+    const currentAdmin = this.getCurrentAdmin();
+    if (!currentAdmin) {
+      throw new Error('No admin logged in');
+    }
+
+    return this.apiService.uploadAdminProfilePhoto(currentAdmin.adminId.toString(), file).pipe(
+      map((response: any) => {
+        if (response && response.success && response.data && response.data.imageUrl) {
+          return response.data.imageUrl;
+        } else {
+          throw new Error(response?.error || 'Failed to upload profile photo');
+        }
       })
     );
   }

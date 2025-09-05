@@ -1,8 +1,8 @@
 // Environment configuration for production
 export const environment = {
   production: true,
-  apiUrl: '', // Will be updated when backend is deployed
-  backendUrl: '', // Will be updated when backend is deployed
+  apiUrl: 'https://benedictocollege-library.org:3000/api/v1',
+  backendUrl: 'https://benedictocollege-library.org:3000',
   
   // API endpoints
   endpoints: {
@@ -19,8 +19,8 @@ export const environment = {
   
   // CORS settings for production
   allowedOrigins: [
-    'https://your-frontend-domain.com',
-    'https://your-backend-domain.com'
+    'https://benedictocollege-library.org',
+    'https://benedictocollege-library.org:3000'
   ],
 
   // Connection retry settings for production

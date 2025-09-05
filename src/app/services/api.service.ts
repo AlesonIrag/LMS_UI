@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject, timer, of } from 'rxjs';
-import { catchError, retry, timeout, map, delay } from 'rxjs/operators';
+import { catchError, retry, timeout, map, delay, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface ApiResponse<T = any> {
@@ -180,20 +180,242 @@ export class ApiService {
     );
   }
 
-  // Admin profile and session management
-  getAdminProfile(adminId: number): Observable<ApiResponse> {
-    return this.get(`${environment.endpoints.adminAuth}/get-admin/${adminId}`);
-  }
-
-
-
   // Weather endpoints
   getWeather(): Observable<ApiResponse> {
     return this.get(environment.endpoints.weather);
   }
 
+  // Password Reset endpoints
+  requestOTP(email: string, userType: string): Observable<ApiResponse> {
+    return this.post('/password-reset/request-otp', { email, userType });
+  }
+
+  verifyOTP(email: string, userType: string, otp: string): Observable<ApiResponse> {
+    return this.post('/password-reset/verify-otp', { email, userType, otp });
+  }
+
+  resetPassword(resetToken: string, newPassword: string, confirmPassword: string): Observable<ApiResponse> {
+    return this.post('/password-reset/reset-password', { resetToken, newPassword, confirmPassword });
+  }
+
+  // File upload endpoints
+  uploadProfilePhoto(studentId: string, file: File): Observable<ApiResponse> {
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+
+    return this.http.post<ApiResponse>(
+      `${this.baseUrl}/uploads/profile-photo/${studentId}`,
+      formData,
+      {
+        headers: {
+          // Don't set Content-Type header, let browser set it with boundary for FormData
+        }
+      }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteProfilePhoto(studentId: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(
+      `${this.baseUrl}/uploads/profile-photo/${studentId}`
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Admin profile photo upload endpoints
+  uploadAdminProfilePhoto(adminId: string, file: File): Observable<ApiResponse> {
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+
+    return this.http.post<ApiResponse>(
+      `${this.baseUrl}/uploads/admin-profile-photo/${adminId}`,
+      formData,
+      {
+        headers: {
+          // Don't set Content-Type header, let browser set it with boundary for FormData
+        }
+      }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteAdminProfilePhoto(adminId: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(
+      `${this.baseUrl}/uploads/admin-profile-photo/${adminId}`
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Faculty profile photo upload endpoints
+  uploadFacultyProfilePhoto(facultyId: string, file: File): Observable<ApiResponse> {
+    console.log('🚀 API Service: uploadFacultyProfilePhoto called');
+    console.log('📁 File details:', { name: file.name, size: file.size, type: file.type });
+    console.log('👤 Faculty ID:', facultyId);
+
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+
+    const url = `${this.baseUrl}/uploads/profile-photo/${facultyId}`;
+    console.log('🌐 Upload URL:', url);
+
+    return this.http.post<ApiResponse>(
+      url,
+      formData,
+      {
+        headers: {
+          // Don't set Content-Type header, let browser set it with boundary for FormData
+        }
+      }
+    ).pipe(
+      tap((response: ApiResponse) => {
+        console.log('✅ API Service: Upload response received:', response);
+      }),
+      catchError((error) => {
+        console.error('❌ API Service: Upload error:', error);
+        return this.handleError(error);
+      })
+    );
+  }
+
+  deleteFacultyProfilePhoto(facultyId: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(
+      `${this.baseUrl}/uploads/faculty-profile-photo/${facultyId}`
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Admin profile management endpoints
+  getAdminProfile(adminId: string): Observable<ApiResponse> {
+    return this.http.get<ApiResponse>(
+      `${this.baseUrl}/adminauth/profile/${adminId}`
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateAdminProfile(adminId: string, profileData: any): Observable<ApiResponse> {
+    return this.http.put<ApiResponse>(
+      `${this.baseUrl}/adminauth/profile/${adminId}`,
+      profileData
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getProfilePhotoUrl(filename: string): string {
+    return `${this.baseUrl}/uploads/profile-photos/${filename}`;
+  }
+
   getWeatherForecast(): Observable<ApiResponse> {
     return this.get(environment.endpoints.weather + '/forecast');
+  }
+
+  // Admin Management endpoints
+  getAllAdmins(page?: number, limit?: number): Observable<ApiResponse> {
+    let endpoint = environment.endpoints.adminAuth + '/get-all-admins';
+    
+    // Build query string manually to ensure parameters are sent correctly
+    const queryParams: string[] = [];
+    if (page) queryParams.push(`page=${page}`);
+    if (limit) queryParams.push(`limit=${limit}`);
+    
+    if (queryParams.length > 0) {
+      endpoint += '?' + queryParams.join('&');
+    }
+    
+    console.log('🌐 API Service: getAllAdmins endpoint:', endpoint);
+    
+    return this.get(endpoint);
+  }
+
+  getAdminById(adminId: string): Observable<ApiResponse> {
+    return this.get(environment.endpoints.adminAuth + `/get-admin/${adminId}`);
+  }
+
+  getAdminsByRole(role: string): Observable<ApiResponse> {
+    return this.get(environment.endpoints.adminAuth + `/get-admins-by-role/${encodeURIComponent(role)}`);
+  }
+
+  createAdmin(adminData: any): Observable<ApiResponse> {
+    return this.post(environment.endpoints.adminAuth + '/register-admin', adminData);
+  }
+
+  updateAdmin(adminId: string, adminData: any): Observable<ApiResponse> {
+    return this.put(environment.endpoints.adminAuth + `/update-admin/${adminId}`, adminData);
+  }
+
+  deleteAdmin(adminId: string): Observable<ApiResponse> {
+    return this.delete(environment.endpoints.adminAuth + `/delete-admin/${adminId}`);
+  }
+
+  changeAdminPassword(adminId: string, passwordData: any): Observable<ApiResponse> {
+    return this.post(environment.endpoints.adminAuth + `/change-admin-password/${adminId}`, passwordData);
+  }
+
+  getAdminAuditLogs(adminId?: string, limit?: number, offset?: number): Observable<ApiResponse> {
+    let endpoint = environment.endpoints.adminAuth + '/admin-audit-logs';
+
+    if (adminId) {
+      endpoint += `/${adminId}`;
+    }
+
+    const params: any = {};
+    if (limit) params.limit = limit.toString();
+    if (offset) params.offset = offset.toString();
+
+    return this.get(endpoint, { params });
+  }
+
+  // Faculty Management endpoints
+  getAllFaculty(): Observable<ApiResponse> {
+    return this.get(environment.endpoints.facultyAuth + '/get-all-faculty');
+  }
+
+  getFacultyById(facultyId: string): Observable<ApiResponse> {
+    return this.get(environment.endpoints.facultyAuth + `/get-faculty/${facultyId}`);
+  }
+
+  getFacultyByDepartment(department: string): Observable<ApiResponse> {
+    return this.get(environment.endpoints.facultyAuth + `/get-faculty-by-department/${encodeURIComponent(department)}`);
+  }
+
+  getFacultyByPosition(position: string): Observable<ApiResponse> {
+    return this.get(environment.endpoints.facultyAuth + `/get-faculty-by-position/${encodeURIComponent(position)}`);
+  }
+
+  createFaculty(facultyData: any): Observable<ApiResponse> {
+    return this.post(environment.endpoints.facultyAuth + '/register-faculty', facultyData);
+  }
+
+  updateFaculty(facultyId: string, facultyData: any): Observable<ApiResponse> {
+    return this.put(environment.endpoints.facultyAuth + `/update-faculty/${facultyId}`, facultyData);
+  }
+
+  deleteFaculty(facultyId: string): Observable<ApiResponse> {
+    return this.delete(environment.endpoints.facultyAuth + `/delete-faculty/${facultyId}`);
+  }
+
+  changeFacultyPassword(facultyId: string, passwordData: any): Observable<ApiResponse> {
+    return this.post(environment.endpoints.facultyAuth + `/change-faculty-password/${facultyId}`, passwordData);
+  }
+
+  getFacultyAuditLogs(facultyId?: string, limit?: number, offset?: number): Observable<ApiResponse> {
+    let endpoint = environment.endpoints.facultyAuth + '/faculty-audit-logs';
+
+    if (facultyId) {
+      endpoint += `/${facultyId}`;
+    }
+
+    const params: any = {};
+    if (limit) params.limit = limit.toString();
+    if (offset) params.offset = offset.toString();
+
+    return this.get(endpoint, { params });
   }
 
   // Private methods
@@ -225,7 +447,7 @@ export class ApiService {
           errorMessage = 'Backend server is not reachable. Please ensure the backend is running.';
           break;
         case 400:
-          errorMessage = 'Bad Request: ' + (error.error?.message || 'Invalid request data');
+          errorMessage = 'Bad Request: ' + (error.error?.error || error.error?.message || 'Invalid request data');
           break;
         case 401:
           errorMessage = 'Unauthorized: ' + (error.error?.message || 'Authentication required');
@@ -256,6 +478,7 @@ export class ApiService {
     return throwError(() => ({
       success: false,
       error: errorMessage,
+      details: error.error?.details || null,
       status: error.status
     }));
   };

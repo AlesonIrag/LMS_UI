@@ -7,6 +7,7 @@
     "start:separated": "ng serve --configuration=separated",
     "build": "ng build",
     "build:prod": "ng build --configuration=production",
+    "build:cloudflare": "ng build --configuration=production --output-path=dist/cloudflare",
     "build:separated": "ng build --configuration=separated",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -36,17 +37,20 @@
     "@angular/platform-browser": "^20.0.6",
     "@angular/router": "^20.0.6",
     "@tailwindcss/postcss": "^4.1.11",
-    "postcss": "^8.5.6",
+    "axios": "^1.11.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "rxjs": "~7.8.0",
-    "tailwindcss": "^4.1.11",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
     "@angular/build": "^20.0.5",
-    "@angular/cli": "^20.0.5",
+    "@angular/cli": "^20.1.6",
     "@angular/compiler-cli": "^20.0.6",
     "@types/jasmine": "~5.1.0",
+    "autoprefixer": "^10.4.21",
+    "cliui": "^9.0.1",
     "concurrently": "^9.1.0",
     "dotenv": "^17.1.0",
     "jasmine-core": "~5.7.0",
@@ -55,6 +59,8 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "typescript": "~5.8.2"
   }
 }

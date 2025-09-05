@@ -2,24 +2,35 @@
 
 /* Navigation Links */
 .nav-link {
-  @apply flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: colors 200ms;
+  cursor: pointer;
 }
 
 .nav-link:hover {
-  @apply bg-gray-100 text-gray-900;
+  background-color: #f3f4f6;
+  color: #111827;
 }
 
 .nav-link.active {
-  @apply bg-blue-600 text-white;
+  background-color: #2563eb;
+  color: white;
 }
 
 /* Dark mode navigation */
 [data-theme="dark"] .nav-link:hover {
-  @apply bg-gray-700 text-white;
+  background-color: #374151;
+  color: white;
 }
 
 [data-theme="dark"] .nav-link.active {
-  @apply bg-blue-600 text-white;
+  background-color: #2563eb;
+  color: white;
 }
 
 /* Search Button Animation */
@@ -160,9 +171,19 @@
   }
 }
 
-/* Right Sidebar */
+/* Right Sidebar - Fixed positioning for consistent layout */
 .right-sidebar {
-  min-height: 100vh;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* Sidebar fixed height and layout */
+aside.w-64 {
+  height: 100vh;
+  position: sticky;
+  top: 0;
 }
 
 /* Mobile Responsive */
@@ -216,10 +237,22 @@
     display: none;
   }
 
-  /* Ensure sidebar is visible on desktop */
+  /* Ensure left sidebar is visible on desktop */
   aside.w-64 {
-    position: relative;
+    position: sticky;
+    top: 0;
+    height: 100vh;
     transform: translateX(0) !important;
+  }
+
+  /* Ensure right sidebar is visible on desktop */
+  .right-sidebar {
+    display: flex !important;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
   }
 }
 
@@ -230,15 +263,17 @@
 
 /* Faculty-specific color scheme */
 .faculty-primary {
-  @apply bg-green-600 text-white;
+  background-color: #059669;
+  color: white;
 }
 
 .faculty-primary:hover {
-  @apply bg-green-700;
+  background-color: #047857;
 }
 
 .faculty-secondary {
-  @apply bg-green-100 text-green-800;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 /* Academic resource cards */
@@ -292,11 +327,19 @@
 
 /* Faculty badge styles */
 .faculty-badge {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 [data-theme="dark"] .faculty-badge {
-  @apply bg-green-900 text-green-200;
+  background-color: #14532d;
+  color: #bbf7d0;
 }
 
 /* Enhanced focus states for accessibility */

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { WeatherLoggerService } from '../services/weather-logger.service';
 import { FacultyAuthService } from '../services/faculty-auth.service';
+import { ThemeService } from '../services/theme.service';
+import { AnnouncementService, Announcement, NewsItem } from '../services/announcement.service';
 
 interface WeatherResponse {
   success: boolean;
@@ -91,12 +93,23 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   private weatherSubscription?: Subscription;
   private statsSubscription?: Subscription;
 
-  // Dark mode and mobile menu state
-  isDarkMode: boolean = false;
+  // Mobile menu state
   isMobileMenuOpen: boolean = false;
 
   // Logout modal state
   showLogoutModal: boolean = false;
+
+  // Profile modal state
+  showProfileModal: boolean = false;
+  profileModalTop: string = '70px';
+  profileModalRight: string = '20px';
+
+  @ViewChild('profileButton', { static: false }) profileButton!: ElementRef;
+
+  // Profile photo properties
+  currentUserInitial: string = 'F';
+  currentUserProfilePhoto: string = '';
+  currentUserName: string = 'Faculty';
 
   // Chat widget state
   isChatOpen: boolean = false;
@@ -107,6 +120,9 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   hasUnreadMessages: boolean = false;
   unreadCount: number = 0;
 
+  // Sidebar visibility state - Always show right sidebar
+  isSidebarHidden: boolean = false;
+
   // Weather data
   temperature: string = '31°C';
   location: string = 'Cebu City';
@@ -114,19 +130,10 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
 
   // Chat messages
   chatMessages: Array<{
-    id: number;
     text: string;
     isUser: boolean;
-    timestamp: Date;
-    isTyping?: boolean;
-  }> = [
-    {
-      id: 1,
-      text: "Hello! I'm BC-AI, your library assistant. How can I help you find academic resources or research materials today?",
-      isUser: false,
-      timestamp: new Date()
-    }
-  ];
+    time: string;
+  }> = [];
 
   // Current view state
   currentView: string = 'dashboard';
@@ -162,12 +169,33 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   borrowingHistory: Loan[] = [];
   fines: Fine[] = [];
 
+  // Quote of the Day properties
+  currentQuote: any = null;
+  isQuoteLoading: boolean = false;
+  quoteError: string | null = null;
+
+  // Random Fact properties
+  randomFact: string = 'Loading...';
+  factError: string | null = null;
+
+  // News and announcements - dynamic
+  latestNews: NewsItem[] = [];
+  announcements: Announcement[] = [];
+  private announcementSubscriptions: Subscription[] = [];
+
   constructor(
     private router: Router,
     private http: HttpClient,
     private weatherLogger: WeatherLoggerService,
-    private facultyAuthService: FacultyAuthService
+    private facultyAuthService: FacultyAuthService,
+    private themeService: ThemeService,
+    private announcementService: AnnouncementService
   ) {}
+
+  // Getter for dark mode state from theme service
+  get isDarkMode(): boolean {
+    return this.themeService.isDarkMode;
+  }
 
   async ngOnInit(): Promise<void> {
     console.log('🎯 Faculty Dashboard component initialized successfully!');
@@ -179,8 +207,11 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     this.loadWeatherData();
     this.startStatsUpdates();
     this.animateCounters();
-    this.loadDarkModePreference();
     this.initializeFacultyData();
+    this.loadUserProfileData();
+    this.loadQuoteOfTheDay();
+    this.loadRandomFact();
+    this.loadAnnouncements();
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
@@ -197,6 +228,7 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.weatherSubscription?.unsubscribe();
     this.statsSubscription?.unsubscribe();
+    this.announcementSubscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private loadWeatherData(): void {
@@ -241,6 +273,41 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.weatherIcon = iconMap[condition.toLowerCase()] || 'sunny';
+    
+    // Update DOM elements with the correct SVG paths
+    setTimeout(() => {
+      this.updateWeatherIconPaths(condition);
+    }, 100);
+  }
+
+  private updateWeatherIconPaths(condition: string): void {
+    const iconElement = document.getElementById('weather-icon');
+    const iconElementMobile = document.getElementById('weather-icon-mobile');
+    
+    if (!iconElement && !iconElementMobile) return;
+
+    let iconPath = '';
+    switch (condition.toLowerCase()) {
+      case 'clear':
+        iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+        break;
+      case 'clouds':
+        iconPath = 'M19.36 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96z';
+        break;
+      case 'rain':
+        iconPath = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
+        break;
+      default:
+        iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z';
+    }
+
+    if (iconElement) {
+      iconElement.innerHTML = `<path d="${iconPath}"/>`;
+    }
+    
+    if (iconElementMobile) {
+      iconElementMobile.innerHTML = `<path d="${iconPath}"/>`;
+    }
   }
 
   private startStatsUpdates(): void {
@@ -281,11 +348,6 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
-  private loadDarkModePreference(): void {
-    const savedMode = localStorage.getItem('darkMode');
-    this.isDarkMode = savedMode === 'true';
-  }
-
   private initializeFacultyData(): void {
     this.loadAvailableBooks();
     this.loadCurrentLoans();
@@ -297,8 +359,9 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
 
   // Dark mode and UI methods
   toggleDarkMode(): void {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem('darkMode', this.isDarkMode.toString());
+    this.themeService.toggleDarkMode();
+    // Refresh the page to ensure all components update properly
+    window.location.reload();
   }
 
   toggleMobileMenu(): void {
@@ -311,6 +374,11 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
 
   // Navigation methods
   onNavigate(view: string): void {
+    console.log(`Faculty navigating to ${view}`);
+
+    // Keep sidebar always visible - removed dynamic hiding behavior
+    // this.isSidebarHidden = view !== 'dashboard';
+
     this.currentView = view;
     this.updatePagination();
   }
@@ -347,7 +415,8 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
       id: Date.now(),
       text: this.chatInput,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     this.chatMessages.push(userMessage);
@@ -370,7 +439,8 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
       id: Date.now(),
       text: randomResponse,
       isUser: false,
-      timestamp: new Date()
+      timestamp: new Date(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     this.chatMessages.push(aiMessage);
@@ -429,9 +499,156 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
     // Implement notification functionality
   }
 
-  onProfileClick(): void {
-    console.log('Faculty profile clicked');
-    // Implement profile functionality
+  onProfileClick(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    console.log('Faculty profile clicked - showProfileModal before:', this.showProfileModal);
+    this.showProfileModal = !this.showProfileModal;
+    if (this.showProfileModal) {
+      this.calculateModalPosition();
+    }
+    console.log('Faculty profile clicked - showProfileModal after:', this.showProfileModal);
+  }
+
+  private calculateModalPosition(): void {
+    if (this.profileButton && this.profileButton.nativeElement) {
+      const buttonRect = this.profileButton.nativeElement.getBoundingClientRect();
+      const modalWidth = 192; // 48 * 4 = 192px (w-48 in Tailwind)
+
+      // Position the modal below the button and aligned to its right edge
+      this.profileModalTop = `${buttonRect.bottom + 8}px`; // 8px margin below button
+      this.profileModalRight = `${window.innerWidth - buttonRect.right}px`; // Align to right edge of button
+
+      console.log('Faculty modal position calculated:', {
+        top: this.profileModalTop,
+        right: this.profileModalRight,
+        buttonRect: buttonRect
+      });
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: any): void {
+    if (this.showProfileModal) {
+      this.calculateModalPosition();
+    }
+  }
+
+  // Profile modal methods
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+  }
+
+  viewProfile(): void {
+    this.showProfileModal = false;
+    // Navigate to faculty profile page
+    this.router.navigate(['/faculty-profile']);
+  }
+
+  // Profile photo methods
+  loadUserProfileData(): void {
+    console.log('🚀 loadUserProfileData() called');
+    const currentFaculty = this.facultyAuthService.getCurrentFaculty();
+    console.log('🔍 Current faculty from auth service:', currentFaculty);
+
+    if (currentFaculty) {
+      // Set basic user info
+      this.currentUserName = currentFaculty.fullName || 'Faculty';
+      const firstName = currentFaculty.fullName?.split(' ')[0] || 'Faculty';
+      this.currentUserInitial = firstName.charAt(0).toUpperCase();
+
+      console.log('👤 Basic faculty info set:', {
+        name: this.currentUserName,
+        initial: this.currentUserInitial
+      });
+
+      // Try to get detailed profile with photo
+      this.facultyAuthService.getDetailedProfile().subscribe({
+        next: (profile) => {
+          console.log('✅ Detailed faculty profile loaded:', profile);
+
+          if (profile?.profilePhoto) {
+            console.log('📸 Profile photo found:', profile.profilePhoto);
+            this.currentUserProfilePhoto = profile.profilePhoto;
+          } else {
+            console.log('📸 No profile photo found, using default');
+            this.currentUserProfilePhoto = '';
+          }
+
+          // Update name from detailed profile if available
+          if (profile?.firstName) {
+            const fullName = `${profile.firstName} ${profile.lastName || ''}`.trim();
+            this.currentUserName = fullName;
+            this.currentUserInitial = profile.firstName.charAt(0).toUpperCase();
+            console.log('👤 Updated faculty info from detailed profile:', {
+              name: this.currentUserName,
+              initial: this.currentUserInitial,
+              photo: this.currentUserProfilePhoto
+            });
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error loading detailed profile:', error);
+          // Fallback to basic faculty data
+          const firstName = currentFaculty.fullName?.split(' ')[0] || 'Faculty';
+          this.currentUserInitial = firstName.charAt(0).toUpperCase();
+          console.log('🔄 Fallback: Using initial from basic faculty data:', this.currentUserInitial);
+        }
+      });
+    } else {
+      console.log('❌ No current faculty found');
+    }
+  }
+
+  hasValidProfilePhoto(): boolean {
+    const photoUrl = this.currentUserProfilePhoto;
+    return Boolean(photoUrl &&
+                   photoUrl.trim() !== '' &&
+                   !photoUrl.includes('data:image/svg+xml') && // Not the default SVG
+                   (photoUrl.startsWith('http://') || photoUrl.startsWith('https://') || photoUrl.startsWith('/')));
+  }
+
+  getProfileImageSrc(): string {
+    // Return uploaded photo if available and valid, otherwise return default SVG
+    if (this.hasValidProfilePhoto()) {
+      let imageUrl = this.currentUserProfilePhoto;
+
+      // Convert relative URLs to full backend URLs
+      if (imageUrl.startsWith('/api/')) {
+        imageUrl = `http://localhost:3000${imageUrl}`;
+      }
+
+      return imageUrl;
+    }
+
+    // Return default faculty avatar with initial
+    return `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+        <rect width="32" height="32" fill="#3B82F6"/>
+        <text x="16" y="22" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">${this.currentUserInitial}</text>
+      </svg>
+    `)}`;
+  }
+
+  onImageError(event: any): void {
+    console.log('🖼️ Faculty image load error, falling back to default');
+    event.target.src = `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+        <rect width="32" height="32" fill="#3B82F6"/>
+        <text x="16" y="22" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">${this.currentUserInitial}</text>
+      </svg>
+    `)}`;
+  }
+
+  onImageLoad(event: any): void {
+    console.log('🖼️ Faculty profile image loaded successfully');
+  }
+
+  onAvatarError(event: any): void {
+    console.log('🖼️ BC-AI avatar image load error, using fallback');
+    this.avatarError = true;
+    // The template will show the fallback SVG icon when avatarError is true
   }
 
   // Quick action methods
@@ -788,5 +1005,163 @@ export class FacultyDashboardComponent implements OnInit, OnDestroy {
 
   getTotalPaidFines(): number {
     return this.fines.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
+  }
+
+  // Date methods
+  getCurrentDate(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // Quote of the Day methods
+  private loadQuoteOfTheDay(): void {
+    console.log('🎯 === LOADING FACULTY QUOTE OF THE DAY ===');
+    this.isQuoteLoading = true;
+    this.quoteError = null;
+
+    // Fetch quote with faculty-specific categories
+    this.fetchFacultyQuote().subscribe({
+      next: (response: any) => {
+        console.log('🔍 Faculty quote response:', response);
+        if (response && (response.quote || response.text)) {
+          this.currentQuote = {
+            text: response.quote || response.text || 'No quote available',
+            author: response.author || 'Unknown Author'
+          };
+          this.quoteError = null;
+          console.log('✅ Faculty quote loaded successfully:', this.currentQuote);
+        } else {
+          this.quoteError = 'Failed to load quote';
+          console.log('❌ Faculty quote loading failed:', this.quoteError);
+        }
+        this.isQuoteLoading = false;
+      },
+      error: (error: any) => {
+        console.error('❌ Error loading faculty quote:', error);
+        this.quoteError = 'Failed to load quote of the day';
+        this.isQuoteLoading = false;
+        
+        // Fallback quote for faculty
+        this.currentQuote = {
+          text: "The best teachers are those who show you where to look but don't tell you what to see.",
+          author: "Anonymous"
+        };
+      }
+    });
+  }
+
+  private fetchFacultyQuote() {
+    // Faculty-specific categories: teacher, motivation, inspiration, education
+    const categories = ['teacher', 'motivation', 'inspiration', 'education'];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    
+    const url = `https://benedictocollege-quote-api.netlify.app/.netlify/functions/random?category=${randomCategory}`;
+    
+    console.log('🌐 Making faculty quote API request to:', url);
+    return this.http.get(url);
+  }
+
+  private loadRandomFact(): void {
+    this.http.get<any>('https://uselessfacts.jsph.pl/api/v2/facts/random').subscribe({
+      next: (data) => {
+        this.randomFact = data.text;
+      },
+      error: (error) => {
+        this.factError = 'Failed to load a fact. Please try again later.';
+        this.randomFact = 'Could not fetch a fact at this time.';
+        console.error('Error fetching random fact:', error);
+      }
+    });
+  }
+
+  // Greeting methods
+  getGreeting(): string {
+    const currentFaculty = this.facultyAuthService.getCurrentFaculty();
+    const firstName = currentFaculty?.firstName || currentFaculty?.fullName?.split(' ')[0] || 'Faculty';
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Good Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Good Afternoon';
+    } else {
+      timeGreeting = 'Good Evening';
+    }
+
+    return `${timeGreeting}, ${firstName}!`;
+  }
+
+  getMobileGreeting(): string {
+    const currentFaculty = this.facultyAuthService.getCurrentFaculty();
+    const firstName = currentFaculty?.firstName || currentFaculty?.fullName?.split(' ')[0] || 'Faculty';
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Afternoon';
+    } else {
+      timeGreeting = 'Evening';
+    }
+
+    return `Good ${timeGreeting}, ${firstName}!`;
+  }
+
+  // Announcement loading methods
+  private loadAnnouncements(): void {
+    // Load announcements for faculty
+    const announcementSub = this.announcementService.getAnnouncementsByAudience('faculty').subscribe(announcements => {
+      this.announcements = announcements;
+    });
+    this.announcementSubscriptions.push(announcementSub);
+
+    // Load news items
+    const newsSub = this.announcementService.getActiveNews().subscribe(news => {
+      this.latestNews = news;
+    });
+    this.announcementSubscriptions.push(newsSub);
+  }
+
+  // Utility methods for announcements
+  getTimeAgo(dateString: string): string {
+    return this.announcementService.getTimeAgo(dateString);
+  }
+
+  getTypeIcon(type: string): string {
+    switch (type) {
+      case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
+      case 'success': return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'error': return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+      default: return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    }
+  }
+
+  getTypeColor(type: string): string {
+    switch (type) {
+      case 'warning': return 'text-yellow-500';
+      case 'success': return 'text-green-500';
+      case 'error': return 'text-red-500';
+      default: return 'text-blue-500';
+    }
+  }
+
+  getNewsColor(color: string): string {
+    switch (color) {
+      case 'red': return 'bg-red-500';
+      case 'green': return 'bg-green-500';
+      case 'blue': return 'bg-blue-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'purple': return 'bg-purple-500';
+      default: return 'bg-blue-500';
+    }
   }
 }
