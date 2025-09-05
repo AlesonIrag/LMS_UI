@@ -51,7 +51,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
   csvValidationResults: { valid: any[], invalid: any[] } = { valid: [], invalid: [] };
   csvImportStep: 'upload' | 'validate' | 'import' = 'upload';
   csvImportProgress: number = 0;
-  isDragOver: boolean = false;
 
   newStudent = {
     studentID: '',
@@ -457,13 +456,13 @@ export class StudentsComponent implements OnInit, OnDestroy {
       studentID: this.editStudent.studentID,
       firstName: this.editStudent.firstName,
       lastName: this.editStudent.lastName,
-      middleInitial: this.editStudent.middleInitial || '',
-      suffix: this.editStudent.suffix || '',
+      middleInitial: this.editStudent.middleInitial,
+      suffix: this.editStudent.suffix,
       course: this.editStudent.course,
       yearLevel: parseInt(this.editStudent.yearLevel),
-      section: this.editStudent.section || '',
+      section: this.editStudent.section,
       email: this.editStudent.email,
-      phoneNumber: this.editStudent.phoneNumber || '',
+      phoneNumber: this.editStudent.phoneNumber,
       enrollmentStatus: this.editStudent.enrollmentStatus,
       accountStatus: this.editStudent.accountStatus
     };
@@ -481,17 +480,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('❌ Failed to update student:', error);
-        let errorMessage = 'Failed to update student. Please try again.';
-
-        if (error.error && error.error.error) {
-          errorMessage = error.error.error;
-        } else if (error.error && error.error.message) {
-          errorMessage = error.error.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-
-        this.toastService.error(errorMessage);
+        this.toastService.error('Failed to update student. Please try again.');
         this.isSubmitting = false;
       }
     });
@@ -594,17 +583,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         });
         this.isSubmitting = false;
 
-        let errorMessage = 'Failed to delete student. Please try again.';
-
-        if (error.error && error.error.error) {
-          errorMessage = error.error.error;
-        } else if (error.error && error.error.message) {
-          errorMessage = error.error.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-
-        this.toastService.error(errorMessage);
+        this.toastService.error('Failed to delete student. Please try again.');
       }
     });
   }
@@ -862,67 +841,12 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   onCsvFileSelected(event: any): void {
     const file = event.target.files[0];
-    this.handleFileSelection(file);
-  }
-
-  // Drag and drop event handlers
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = true;
-  }
-
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-    
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.handleFileSelection(files[0]);
-    }
-  }
-
-  private handleFileSelection(file: File): void {
-    if (!file) {
-      this.toastService.error('No file selected');
-      return;
-    }
-
-    // Check file extension
-    const fileExtension = file.name.toLowerCase().split('.').pop();
-    if (fileExtension !== 'csv') {
-      this.toastService.error('Please select a CSV file (.csv extension required)');
-      return;
-    }
-
-    // Check MIME type
-    if (file.type && file.type !== 'text/csv' && file.type !== 'application/csv') {
+    if (file && file.type === 'text/csv') {
+      this.csvFile = file;
+      this.readCsvFile();
+    } else {
       this.toastService.error('Please select a valid CSV file');
-      return;
     }
-
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-    if (file.size > maxSize) {
-      this.toastService.error('File size must be less than 10MB');
-      return;
-    }
-
-    // Check if file is empty
-    if (file.size === 0) {
-      this.toastService.error('Selected file is empty');
-      return;
-    }
-
-    this.csvFile = file;
-    this.readCsvFile();
   }
 
   private readCsvFile(): void {
@@ -930,66 +854,13 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const csvContent = e.target?.result as string;
-        
-        if (!csvContent || csvContent.trim().length === 0) {
-          this.toastService.error('CSV file is empty or could not be read');
-          return;
-        }
+      const csvContent = e.target?.result as string;
+      const headers = ['studentId', 'firstName', 'lastName', 'middleInitial', 'suffix', 'email', 'phoneNumber', 'password', 'course', 'yearLevel', 'status'];
 
-        // Check if file has content
-        const lines = csvContent.trim().split('\n');
-        if (lines.length < 2) {
-          this.toastService.error('CSV file must contain at least a header row and one data row');
-          return;
-        }
-
-        const headers = ['studentId', 'firstName', 'lastName', 'middleInitial', 'suffix', 'email', 'phoneNumber', 'password', 'course', 'yearLevel', 'section', 'status'];
-        
-        // Validate CSV headers (case-insensitive) - password is now optional for security
-        const firstLine = lines[0].toLowerCase();
-        const requiredHeaders = ['firstname', 'lastname', 'email', 'course', 'yearlevel'];
-        const missingHeaders = requiredHeaders.filter(header => {
-          // Check if header exists in any common format variations
-          const variations = [
-            header,
-            header.charAt(0).toUpperCase() + header.slice(1), // FirstName
-            header.toUpperCase(), // FIRSTNAME
-            header.replace(/([A-Z])/g, '_$1').toLowerCase(), // first_name
-            header.replace(/([A-Z])/g, '-$1').toLowerCase()  // first-name
-          ];
-          return !variations.some(variation => firstLine.includes(variation.toLowerCase()));
-        });
-        
-        if (missingHeaders.length > 0) {
-          this.toastService.error(`CSV file is missing required headers: ${missingHeaders.join(', ')}`);
-          return;
-        }
-
-        this.csvData = this.csvService.parseCsv(csvContent, headers);
-        
-        if (this.csvData.length === 0) {
-          this.toastService.error('No valid data found in CSV file');
-          return;
-        }
-
-        this.csvValidationResults = this.csvService.validateStudentData(this.csvData);
-        this.csvImportStep = 'validate';
-        
-        if (this.csvValidationResults.valid.length === 0 && this.csvValidationResults.invalid.length > 0) {
-          this.toastService.warning('No valid students found in CSV file. Please check the validation errors.');
-        }
-      } catch (error) {
-        console.error('Error reading CSV file:', error);
-        this.toastService.error('Error reading CSV file. Please ensure it is properly formatted.');
-      }
+      this.csvData = this.csvService.parseCsv(csvContent, headers);
+      this.csvValidationResults = this.csvService.validateStudentData(this.csvData);
+      this.csvImportStep = 'validate';
     };
-    
-    reader.onerror = () => {
-      this.toastService.error('Error reading file. Please try again.');
-    };
-    
     reader.readAsText(this.csvFile);
   }
 
@@ -1073,7 +944,5 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.csvService.generateStudentTemplate();
     this.toastService.info('Student CSV template downloaded!');
   }
-
-  
 
 }

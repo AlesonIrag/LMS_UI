@@ -6,8 +6,6 @@ import { ThemeService } from '../../services/theme.service';
 import { CsvService } from '../../services/csv.service';
 import { ToastService } from '../../services/toast.service';
 import { ToastComponent } from '../../components/toast/toast.component';
-import { AuthService } from '../../services/auth.service';
-import { ArchivedBooksService } from '../../services/archived-books.service';
 
 interface Book {
   BookID?: number;
@@ -42,10 +40,7 @@ export class BooksComponent implements OnInit {
   showDeleteConfirmModal: boolean = false;
   showBookSummaryModal: boolean = false;
   showImportCsvModal: boolean = false;
-  showArchiveModal: boolean = false;
   isSubmitting: boolean = false;
-  isRefreshing: boolean = false;
-  archiveFormSubmitted: boolean = false;
 
   // CSV related properties
   csvFile: File | null = null;
@@ -53,7 +48,11 @@ export class BooksComponent implements OnInit {
   csvValidationResults: { valid: any[], invalid: any[] } = { valid: [], invalid: [] };
   csvImportStep: 'upload' | 'validate' | 'import' = 'upload';
   csvImportProgress: number = 0;
-  isDragOver: boolean = false;
+
+  // Notification system
+  showNotification: boolean = false;
+  notificationMessage: string = '';
+  notificationType: 'success' | 'error' = 'success';
 
   // Selected book for view/edit/delete operations
   selectedBook: Book | null = null;
@@ -94,24 +93,8 @@ export class BooksComponent implements OnInit {
     AcquisitionDate: ''
   };
 
-  archiveData = {
-    reason: '',
-    notes: ''
-  };
-
   books: Book[] = [];
   allBooks: Book[] = [];
-  filteredBooks: Book[] = []; // For client-side filtering
-
-  // Search and Filter properties
-  searchTerm: string = '';
-  selectedCategory: string = '';
-  selectedStatus: string = '';
-  selectedSubject: string = '';
-  
-  // Sorting properties
-  sortColumn: string = 'title';
-  sortDirection: 'asc' | 'desc' = 'asc';
 
   // Pagination properties
   currentPage: number = 1;
@@ -123,9 +106,7 @@ export class BooksComponent implements OnInit {
     private apiService: ApiService,
     private themeService: ThemeService,
     private csvService: CsvService,
-    private toastService: ToastService,
-    private authService: AuthService,
-    private archivedBooksService: ArchivedBooksService
+    private toastService: ToastService
   ) { }
 
   // Getter for dark mode state from theme service
@@ -139,234 +120,51 @@ export class BooksComponent implements OnInit {
   }
 
   loadBooks(): void {
-    // For search functionality, we'll load all books
-    // Add a high limit to get all books from the paginated API
-    this.apiService.get('/books/get-all-books?limit=10000').subscribe({
+    // Build query parameters for pagination
+    const params = `?page=${this.currentPage}&limit=${this.itemsPerPage}`;
+
+    this.apiService.get(`/books/get-all-books${params}`).subscribe({
       next: (response: any) => {
         console.log('📥 API Response:', response);
         if (response.success) {
-          this.allBooks = response.books || [];
-          this.applyFiltersAndSort();
-          console.log('✅ Books loaded:', this.allBooks.length, 'total books');
+          this.books = response.books || [];
+          this.allBooks = response.books || []; // Keep for compatibility with existing methods
+
+          // Use pagination info from server
+          if (response.pagination) {
+            this.totalBooks = response.pagination.totalBooks;
+            this.totalPages = response.pagination.totalPages;
+            this.currentPage = response.pagination.currentPage;
+          } else {
+            // Fallback for backward compatibility
+            this.totalBooks = this.books.length;
+            this.totalPages = Math.ceil(this.totalBooks / this.itemsPerPage);
+          }
+
+          console.log('✅ Books loaded:', this.books.length, 'books for page', this.currentPage);
+          console.log('📊 Pagination Info:', {
+            totalBooks: this.totalBooks,
+            itemsPerPage: this.itemsPerPage,
+            totalPages: this.totalPages,
+            currentPage: this.currentPage
+          });
         }
       },
       error: (error) => {
         console.error('❌ Error loading books:', error);
+        // Keep books array empty if API fails
         this.allBooks = [];
         this.books = [];
         this.totalBooks = 0;
         this.totalPages = 0;
-        this.toastService.error('Failed to load books from database');
       }
     });
   }
 
   updateDisplayedBooks(): void {
-    // No longer needed since we're using client-side filtering
-    // The books array is already filtered and paginated in applyFiltersAndSort
-    console.log('📄 updateDisplayedBooks called - using client-side filtering');
-  }
-
-  // Search functionality
-  onSearch(): void {
-    this.currentPage = 1; // Reset to first page when searching
-    this.applyFiltersAndSort();
-  }
-
-  // Filter change handler
-  onFilterChange(): void {
-    this.currentPage = 1; // Reset to first page when filtering
-    this.applyFiltersAndSort();
-  }
-
-  // Sort functionality
-  sortBy(column: string): void {
-    if (this.sortColumn === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortColumn = column;
-      this.sortDirection = 'asc';
-    }
-    this.applyFiltersAndSort();
-  }
-
-  // Apply filters and sorting
-  private applyFiltersAndSort(): void {
-    let filtered = [...this.allBooks];
-
-    // Apply search filter
-    if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(book =>
-        book.Title?.toLowerCase().includes(term) ||
-        book.Author?.toLowerCase().includes(term) ||
-        book.ISBN?.toLowerCase().includes(term) ||
-        book.Publisher?.toLowerCase().includes(term) ||
-        book.CallNumber?.toLowerCase().includes(term) ||
-        book.DeweyDecimal?.toLowerCase().includes(term)
-      );
-    }
-
-    // Apply category filter
-    if (this.selectedCategory) {
-      filtered = filtered.filter(book => book.Category === this.selectedCategory);
-    }
-
-    // Apply subject filter
-    if (this.selectedSubject) {
-      filtered = filtered.filter(book => book.Subject === this.selectedSubject);
-    }
-
-    // Apply status filter
-    if (this.selectedStatus) {
-      filtered = filtered.filter(book => book.Status === this.selectedStatus);
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (this.sortColumn) {
-        case 'title':
-          aValue = (a.Title || '').toLowerCase();
-          bValue = (b.Title || '').toLowerCase();
-          break;
-        case 'author':
-          aValue = (a.Author || '').toLowerCase();
-          bValue = (b.Author || '').toLowerCase();
-          break;
-        case 'category':
-          aValue = (a.Category || '').toLowerCase();
-          bValue = (b.Category || '').toLowerCase();
-          break;
-        case 'status':
-          aValue = a.Status || '';
-          bValue = b.Status || '';
-          break;
-        case 'publishedYear':
-          aValue = a.PublishedYear || 0;
-          bValue = b.PublishedYear || 0;
-          break;
-        default:
-          aValue = (a.Title || '').toLowerCase();
-          bValue = (b.Title || '').toLowerCase();
-      }
-
-      if (aValue < bValue) return this.sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    this.filteredBooks = filtered;
-    this.updatePagination();
-  }
-
-  // Update pagination based on filtered results
-  private updatePagination(): void {
-    this.totalBooks = this.filteredBooks.length;
-    this.totalPages = Math.ceil(this.totalBooks / this.itemsPerPage);
-    
-    // Ensure current page is valid
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this.currentPage = this.totalPages;
-    }
-    
-    // Get books for current page
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.books = this.filteredBooks.slice(startIndex, endIndex);
-  }
-
-  // Pagination methods
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.updatePagination();
-    }
-  }
-
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.updatePagination();
-    }
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.updatePagination();
-    }
-  }
-
-  // Get unique categories for filter dropdown
-  getUniqueCategories(): string[] {
-    const categories = [...new Set(this.allBooks.map(book => book.Category).filter(cat => cat && cat.trim()))];
-    return categories.sort();
-  }
-
-  // Get unique subjects for filter dropdown
-  getUniqueSubjects(): string[] {
-    const subjects = [...new Set(this.allBooks.map(book => book.Subject).filter(subj => subj && subj.trim()))];
-    return subjects.sort();
-  }
-
-  // Get unique statuses for filter dropdown
-  getUniqueStatuses(): string[] {
-    const statuses = [...new Set(this.allBooks.map(book => book.Status).filter(status => status))];
-    return statuses.sort();
-  }
-
-  // Pagination helper methods
-  getDisplayRange(): string {
-    if (this.totalBooks === 0) return '0 books';
-    const start = (this.currentPage - 1) * this.itemsPerPage + 1;
-    const end = Math.min(this.currentPage * this.itemsPerPage, this.totalBooks);
-    return `${start}-${end} of ${this.totalBooks}`;
-  }
-
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPages = 5; // Show maximum 5 page numbers
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxPages / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxPages - 1);
-    
-    // Adjust start page if we're near the end
-    if (endPage - startPage + 1 < maxPages) {
-      startPage = Math.max(1, endPage - maxPages + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  // Enhanced refresh functionality
-  refreshBooks(): void {
-    if (this.isRefreshing) return;
-    
-    this.isRefreshing = true;
-    console.log('🔄 Refreshing books data...');
-    
-    this.apiService.get('/books/get-all-books?limit=10000').subscribe({
-      next: (response: any) => {
-        console.log('📥 Refresh API Response:', response);
-        if (response.success) {
-          this.allBooks = response.books || [];
-          this.applyFiltersAndSort();
-          console.log('✅ Books refreshed:', this.allBooks.length, 'total books');
-          this.toastService.success(`Books refreshed successfully! ${this.allBooks.length} books loaded.`);
-        }
-        this.isRefreshing = false;
-      },
-      error: (error) => {
-        console.error('❌ Error refreshing books:', error);
-        this.toastService.error('Failed to refresh books data');
-        this.isRefreshing = false;
-      }
-    });
+    // No longer needed since we're using server-side pagination
+    // The books array is already the correct page from the server
+    console.log('📄 updateDisplayedBooks called - using server-side pagination');
   }
 
   openAddBookModal(): void {
@@ -442,7 +240,7 @@ export class BooksComponent implements OnInit {
         this.closeAddBookModal();
         // Refresh books list to show the new book
         this.loadBooks();
-        this.toastService.success('Book added successfully!');
+        this.showNotificationMessage('Book added successfully!', 'success');
       },
       error: (error) => {
         console.error('❌ Error adding book:', error);
@@ -469,13 +267,19 @@ export class BooksComponent implements OnInit {
           errorMessage = error.message;
         }
 
-        this.toastService.error(errorMessage);
+        this.showNotificationMessage(errorMessage, 'error');
       }
     });
   }
 
   addNewBook(): void {
     this.openAddBookModal();
+  }
+
+  // Refresh books data
+  refreshBooks(): void {
+    console.log('🔄 Refreshing books data...');
+    this.loadBooks();
   }
 
   viewBook(bookId: number | undefined): void {
@@ -510,14 +314,79 @@ export class BooksComponent implements OnInit {
     }
   }
 
-  // Pagination methods (already defined above, removing duplicates)
-  // goToPage, previousPage, nextPage, getPageNumbers are already implemented above
+  // Notification methods
+  showNotificationMessage(message: string, type: 'success' | 'error'): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      this.hideNotification();
+    }, 5000);
+  }
+
+  hideNotification(): void {
+    this.showNotification = false;
+    this.notificationMessage = '';
+  }
+
+  // Pagination methods
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadBooks(); // Reload data from server for the new page
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadBooks(); // Reload data from server for the previous page
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadBooks(); // Reload data from server for the next page
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (this.totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
+  getDisplayRange(): string {
+    if (this.totalBooks === 0) return '0 - 0 of 0';
+
+    const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const end = Math.min(this.currentPage * this.itemsPerPage, this.totalBooks);
+
+    return `${start} - ${end} of ${this.totalBooks}`;
+  }
 
   onItemsPerPageChange(): void {
     // Reset to first page when changing items per page
     this.currentPage = 1;
-    // Use client-side filtering instead of server reload
-    this.updatePagination();
+    // Reload data from server with new page size
+    this.loadBooks();
     console.log('📄 Items per page changed to:', this.itemsPerPage);
   }
 
@@ -587,7 +456,7 @@ export class BooksComponent implements OnInit {
             if (addedCount === testBooks.length) {
               // Refresh the books list after all test books are added
               this.loadBooks();
-              this.toastService.success(`${testBooks.length} test books added successfully!`);
+              this.showNotificationMessage(`${testBooks.length} test books added successfully!`, 'success');
             }
           },
           error: (error) => {
@@ -731,7 +600,7 @@ export class BooksComponent implements OnInit {
         this.closeEditBookModal();
         // Refresh books list to show the updated book
         this.loadBooks();
-        this.toastService.success('Book updated successfully!');
+        this.showNotificationMessage('Book updated successfully!', 'success');
       },
       error: (error) => {
         console.error('❌ Error updating book:', error);
@@ -758,7 +627,7 @@ export class BooksComponent implements OnInit {
           errorMessage = error.message;
         }
 
-        this.toastService.error(errorMessage);
+        this.showNotificationMessage(errorMessage, 'error');
       }
     });
   }
@@ -779,7 +648,7 @@ export class BooksComponent implements OnInit {
         this.closeDeleteConfirmModal();
         // Refresh books list to remove the deleted book
         this.loadBooks();
-        this.toastService.success('Book deleted successfully!');
+        this.showNotificationMessage('Book deleted successfully!', 'success');
       },
       error: (error) => {
         console.error('❌ Error deleting book:', error);
@@ -798,7 +667,7 @@ export class BooksComponent implements OnInit {
           errorMessage = error.message;
         }
 
-        this.toastService.error(errorMessage);
+        this.showNotificationMessage(errorMessage, 'error');
       }
     });
   }
@@ -822,67 +691,12 @@ export class BooksComponent implements OnInit {
 
   onCsvFileSelected(event: any): void {
     const file = event.target.files[0];
-    this.handleFileSelection(file);
-  }
-
-  // Drag and drop event handlers
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = true;
-  }
-
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-    
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.handleFileSelection(files[0]);
-    }
-  }
-
-  private handleFileSelection(file: File): void {
-    if (!file) {
-      this.toastService.error('No file selected');
-      return;
-    }
-
-    // Check file extension
-    const fileExtension = file.name.toLowerCase().split('.').pop();
-    if (fileExtension !== 'csv') {
-      this.toastService.error('Please select a CSV file (.csv extension required)');
-      return;
-    }
-
-    // Check MIME type
-    if (file.type && file.type !== 'text/csv' && file.type !== 'application/csv') {
+    if (file && file.type === 'text/csv') {
+      this.csvFile = file;
+      this.readCsvFile();
+    } else {
       this.toastService.error('Please select a valid CSV file');
-      return;
     }
-
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-    if (file.size > maxSize) {
-      this.toastService.error('File size must be less than 10MB');
-      return;
-    }
-
-    // Check if file is empty
-    if (file.size === 0) {
-      this.toastService.error('Selected file is empty');
-      return;
-    }
-
-    this.csvFile = file;
-    this.readCsvFile();
   }
 
   private readCsvFile(): void {
@@ -890,66 +704,13 @@ export class BooksComponent implements OnInit {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const csvContent = e.target?.result as string;
-        
-        if (!csvContent || csvContent.trim().length === 0) {
-          this.toastService.error('CSV file is empty or could not be read');
-          return;
-        }
+      const csvContent = e.target?.result as string;
+      const headers = ['Title', 'Author', 'ISBN', 'Category', 'Subject', 'PublishedYear', 'CopyrightYear', 'Publisher', 'CallNumber', 'DeweyDecimal', 'Copies', 'Remarks', 'Status', 'ShelfLocation', 'AcquisitionDate'];
 
-        // Check if file has content
-        const lines = csvContent.trim().split('\n');
-        if (lines.length < 2) {
-          this.toastService.error('CSV file must contain at least a header row and one data row');
-          return;
-        }
-
-        const headers = ['Title', 'Author', 'ISBN', 'Category', 'Subject', 'PublishedYear', 'CopyrightYear', 'Publisher', 'CallNumber', 'DeweyDecimal', 'Copies', 'Remarks', 'Status', 'ShelfLocation', 'AcquisitionDate'];
-        
-        // Validate CSV headers (case-insensitive)
-        const firstLine = lines[0].toLowerCase();
-        const requiredHeaders = ['title', 'author', 'isbn'];
-        const missingHeaders = requiredHeaders.filter(header => {
-          // Check if header exists in any common format variations
-          const variations = [
-            header,
-            header.charAt(0).toUpperCase() + header.slice(1), // Title
-            header.toUpperCase(), // TITLE
-            header.replace(/([A-Z])/g, '_$1').toLowerCase(), // title
-            header.replace(/([A-Z])/g, '-$1').toLowerCase()  // title
-          ];
-          return !variations.some(variation => firstLine.includes(variation.toLowerCase()));
-        });
-        
-        if (missingHeaders.length > 0) {
-          this.toastService.error(`CSV file is missing required headers: ${missingHeaders.join(', ')}`);
-          return;
-        }
-
-        this.csvData = this.csvService.parseCsv(csvContent, headers);
-        
-        if (this.csvData.length === 0) {
-          this.toastService.error('No valid data found in CSV file');
-          return;
-        }
-
-        this.csvValidationResults = this.csvService.validateBookData(this.csvData);
-        this.csvImportStep = 'validate';
-        
-        if (this.csvValidationResults.valid.length === 0 && this.csvValidationResults.invalid.length > 0) {
-          this.toastService.warning('No valid books found in CSV file. Please check the validation errors.');
-        }
-      } catch (error) {
-        console.error('Error reading CSV file:', error);
-        this.toastService.error('Error reading CSV file. Please ensure it is properly formatted.');
-      }
+      this.csvData = this.csvService.parseCsv(csvContent, headers);
+      this.csvValidationResults = this.csvService.validateBookData(this.csvData);
+      this.csvImportStep = 'validate';
     };
-    
-    reader.onerror = () => {
-      this.toastService.error('Error reading file. Please try again.');
-    };
-    
     reader.readAsText(this.csvFile);
   }
 
@@ -960,7 +721,6 @@ export class BooksComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.csvImportStep = 'import'; // Set step to import
     this.csvImportProgress = 0;
     const validBooks = this.csvValidationResults.valid;
     let importedCount = 0;
@@ -1054,87 +814,5 @@ export class BooksComponent implements OnInit {
   downloadBookTemplate(): void {
     this.csvService.generateBookTemplate();
     this.toastService.info('Book CSV template downloaded!');
-  }
-
-  // Archive methods
-  openArchiveModal(book: Book): void {
-    this.selectedBook = book;
-    this.showArchiveModal = true;
-    this.archiveFormSubmitted = false;
-    // Reset archive form data
-    this.archiveData = {
-      reason: '',
-      notes: ''
-    };
-  }
-
-  closeArchiveModal(): void {
-    this.showArchiveModal = false;
-    this.selectedBook = null;
-    this.archiveFormSubmitted = false;
-    this.archiveData = {
-      reason: '',
-      notes: ''
-    };
-  }
-
-  confirmArchive(): void {
-    this.archiveFormSubmitted = true;
-    
-    if (!this.archiveData.reason) {
-      this.toastService.error('Please select an archive reason');
-      return;
-    }
-
-    if (!this.selectedBook) {
-      this.toastService.error('No book selected for archiving');
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    // Simulate API call to archive the book
-    setTimeout(() => {
-      if (this.selectedBook) {
-        const adminName = this.getCurrentAdmin()?.fullName || 'Admin User';
-        
-        // Add the book to archived books service
-        this.archivedBooksService.addArchivedBook(
-          this.selectedBook,
-          this.archiveData.reason,
-          this.archiveData.notes,
-          adminName
-        );
-
-        console.log('Book archived and transferred to archived collection:', {
-          book: this.selectedBook,
-          reason: this.archiveData.reason,
-          notes: this.archiveData.notes,
-          archivedBy: adminName,
-          archivedDate: new Date()
-        });
-
-        // Remove the book from the current books array
-        this.books = this.books.filter(book => book.BookID !== this.selectedBook!.BookID);
-        this.allBooks = this.allBooks.filter(book => book.BookID !== this.selectedBook!.BookID);
-        this.totalBooks = this.books.length;
-
-        this.toastService.success(`Book "${this.selectedBook.Title}" has been archived successfully`);
-        this.closeArchiveModal();
-      }
-      this.isSubmitting = false;
-    }, 1500);
-  }
-
-  getCurrentDate(): string {
-    return new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  getCurrentAdmin() {
-    return this.authService.getCurrentAdmin();
   }
 }

@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
-import { ApiService } from '../../services/api.service';
-import { ToastService } from '../../services/toast.service';
 
 interface Student {
   id: string;
@@ -21,9 +19,7 @@ interface Loan {
   book: Book;
   loanDate: string;
   dueDate: string;
-  returnDate?: string | null;
-  status: 'Active' | 'Overdue' | 'Due Today' | 'Returned' | 'Borrowed';
-  renewalCount?: number;
+  status: 'Active' | 'Overdue' | 'Due Today';
 }
 
 interface BorrowingStats {
@@ -43,20 +39,14 @@ interface BorrowingStats {
 export class BorrowingComponent implements OnInit {
 
   stats: BorrowingStats = {
-    activeLoans: 0,
-    returnsToday: 0,
-    overdueItems: 0,
-    dueToday: 0
+    activeLoans: 234,
+    returnsToday: 18,
+    overdueItems: 12,
+    dueToday: 8
   };
 
   // All loans data
-  loans: Loan[] = [];
-  isLoading: boolean = false;
-  isProcessingReturn: boolean = false;
-  error: string | null = null;
-
-  // Mock data removed - will load from API
-  private mockLoans: Loan[] = [
+  loans: Loan[] = [
     {
       id: 'L001',
       student: { id: 'S2024001', name: 'Maria Santos' },
@@ -169,11 +159,7 @@ export class BorrowingComponent implements OnInit {
   sortColumn: string = 'id';
   sortDirection: 'asc' | 'desc' = 'asc';
 
-  constructor(
-    private themeService: ThemeService,
-    private apiService: ApiService,
-    private toastService: ToastService
-  ) { }
+  constructor(private themeService: ThemeService) { }
 
   // Getter for dark mode state from theme service
   get isDarkMode(): boolean {
@@ -181,232 +167,7 @@ export class BorrowingComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadBorrowings();
-  }
-
-  loadBorrowings(): void {
-    this.isLoading = true;
-    this.error = null;
-
-    this.apiService.get('/borrowing/borrowing-transactions').subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          // Show ALL borrowing transactions (including returned ones)
-          this.loans = response.data;
-          this.calculateStats();
-          this.applyFiltersAndSort();
-          console.log('✅ All borrowing transactions loaded:', this.loans.length);
-        } else {
-          this.error = 'Failed to load borrowing data';
-          console.error('❌ Failed to load borrowing transactions:', response);
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.error = 'Failed to load borrowing data';
-        this.isLoading = false;
-        console.error('❌ Error loading borrowing transactions:', error);
-      }
-    });
-  }
-
-  calculateStats(): void {
-    const today = new Date().toISOString().split('T')[0];
-
-    this.stats = {
-      activeLoans: this.loans.filter(loan => loan.status === 'Active').length,
-      returnsToday: this.loans.filter(loan => loan.returnDate === today).length,
-      overdueItems: this.loans.filter(loan => loan.status === 'Overdue').length,
-      dueToday: this.loans.filter(loan => loan.dueDate === today && loan.status === 'Active').length
-    };
-  }
-
-  markAsReturned(loanId: string): void {
-    console.log('🔄 markAsReturned called with loanId:', loanId);
-
-    // Prevent multiple simultaneous returns
-    if (this.isProcessingReturn) {
-      console.log('⚠️ Already processing, returning early');
-      return;
-    }
-
-    // Find the loan to get book details for the confirmation
-    const loan = this.loans.find(l => l.id === loanId);
-    console.log('📚 Found loan:', loan);
-
-    if (!loan) {
-      console.log('❌ Loan not found');
-      this.toastService.error('Error', 'Book not found in the current list.');
-      return;
-    }
-
-    const bookTitle = loan.book.title;
-    const studentName = loan.student.name;
-
-    console.log('📋 Showing confirmation dialog...');
-    // Simple confirmation dialog
-    const confirmed = window.confirm(`Are you sure you want to mark "${bookTitle}" as returned?\n\nStudent: ${studentName}\n\nThis will change the status to "Returned".`);
-    console.log('✅ User confirmed:', confirmed);
-
-    if (!confirmed) {
-      console.log('❌ User cancelled');
-      return;
-    }
-
-    // Set processing state
-    this.isProcessingReturn = true;
-
-    this.apiService.post(`/borrowing/return-book/${loanId}`, {}).subscribe({
-      next: (response: any) => {
-        this.isProcessingReturn = false;
-
-        if (response.success) {
-          console.log('✅ Book returned successfully');
-
-          // Update the loan status in the current list immediately
-          const loanIndex = this.loans.findIndex(l => l.id === loanId);
-          if (loanIndex !== -1) {
-            this.loans[loanIndex].status = 'Returned';
-            this.loans[loanIndex].returnDate = new Date().toISOString().split('T')[0];
-          }
-
-          this.calculateStats();
-          this.applyFiltersAndSort();
-
-          this.toastService.success(
-            'Book Returned Successfully!',
-            `"${bookTitle}" has been marked as returned.`
-          );
-        } else {
-          console.error('❌ Failed to return book:', response);
-          this.toastService.error(
-            'Return Failed',
-            response.error || 'Failed to return book. Please try again.'
-          );
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error returning book:', error);
-        this.isProcessingReturn = false;
-        this.toastService.error(
-          'Return Failed',
-          error.error?.error || 'Failed to return book. Please try again.'
-        );
-      }
-    });
-  }
-
-  // Keep the old method for backward compatibility
-  returnBook(loanId: string): void {
-    this.markAsReturned(loanId);
-  }
-
-  renewBook(loanId: string): void {
-    console.log('🔄 renewBook called with loanId:', loanId);
-
-    // Prevent multiple simultaneous operations
-    if (this.isProcessingReturn) {
-      console.log('⚠️ Already processing, returning early');
-      return;
-    }
-
-    // Find the loan to get book details for the confirmation
-    const loan = this.loans.find(l => l.id === loanId);
-    console.log('📚 Found loan for renewal:', loan);
-
-    if (!loan) {
-      console.log('❌ Loan not found for renewal');
-      this.toastService.error('Error', 'Book not found in the current list.');
-      return;
-    }
-
-    const bookTitle = loan.book.title;
-    const studentName = loan.student.name;
-    const currentDueDate = loan.dueDate;
-
-    console.log('📋 Showing renewal confirmation dialog...');
-    // Simple confirmation dialog with details
-    const confirmed = window.confirm(`Are you sure you want to renew "${bookTitle}"?\n\nStudent: ${studentName}\nCurrent Due Date: ${currentDueDate}\n\nThis will extend the due date by 2 more days.`);
-    console.log('✅ User confirmed renewal:', confirmed);
-
-    if (!confirmed) {
-      console.log('❌ User cancelled renewal');
-      return;
-    }
-
-    // Set processing state
-    this.isProcessingReturn = true;
-
-    this.apiService.post(`/borrowing/renew-book/${loanId}`, {}).subscribe({
-      next: (response: any) => {
-        this.isProcessingReturn = false;
-
-        if (response.success) {
-          console.log('✅ Book renewed successfully:', response);
-
-          // Update the loan due date in the current list immediately if we have the new date
-          if (response.data && response.data.newDueDate) {
-            const loanIndex = this.loans.findIndex(l => l.id === loanId);
-            if (loanIndex !== -1) {
-              this.loans[loanIndex].dueDate = response.data.newDueDate;
-            }
-          }
-
-          this.calculateStats();
-          this.applyFiltersAndSort();
-
-          this.toastService.success(
-            'Book Renewed Successfully!',
-            `"${bookTitle}" loan has been renewed. New due date: ${response.data?.newDueDate || 'Updated'}`
-          );
-        } else {
-          console.error('❌ Failed to renew book:', response);
-          this.toastService.error(
-            'Renewal Failed',
-            response.error || 'Failed to renew book. Please try again.'
-          );
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error renewing book:', error);
-        this.isProcessingReturn = false;
-        this.toastService.error(
-          'Renewal Failed',
-          error.error?.error || 'Failed to renew book. Please try again.'
-        );
-      }
-    });
-  }
-
-  // Modal properties
-  showDetailsModal: boolean = false;
-  selectedLoanDetails: Loan | null = null;
-
-  viewDetails(loan: Loan): void {
-    this.selectedLoanDetails = loan;
-    this.showDetailsModal = true;
-  }
-
-  closeDetailsModal(): void {
-    this.showDetailsModal = false;
-    this.selectedLoanDetails = null;
-  }
-
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'Active':
-        return 'bg-green-100 text-green-800';
-      case 'Overdue':
-        return 'bg-red-100 text-red-800';
-      case 'Due Today':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Returned':
-        return 'bg-blue-100 text-blue-800';
-      case 'Borrowed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    this.applyFiltersAndSort();
   }
 
   getTextClasses(): string {
@@ -423,7 +184,18 @@ export class BorrowingComponent implements OnInit {
       : 'bg-white border-gray-200 text-gray-900';
   }
 
-
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'Active':
+        return 'bg-green-100 text-green-800';
+      case 'Overdue':
+        return 'bg-red-100 text-red-800';
+      case 'Due Today':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
   
   // Apply filters and sorting
   private applyFiltersAndSort(): void {

@@ -8,8 +8,6 @@ import { WeatherLoggerService } from '../services/weather-logger.service';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { QuoteService, Quote } from '../services/quote.service';
-import { NotificationService } from '../services/notification.service';
-import { OverdueService } from '../services/overdue.service';
 
 interface WeatherResponse {
   success: boolean;
@@ -133,22 +131,13 @@ export class Dashboard implements OnInit, OnDestroy {
   isFactLoading: boolean = false;
   factError: string | null = null;
 
-  // Notification properties
-  notifications: any[] = [];
-  adminNotifications: any[] = [];
-  unreadNotificationCount: number = 0;
-  showNotificationDropdown: boolean = false;
-  notificationDropdownPosition = { top: 0, right: 0 };
-
   constructor(
     private http: HttpClient,
     private weatherLogger: WeatherLoggerService,
     private authService: AuthService,
     private router: Router,
     private themeService: ThemeService,
-    private quoteService: QuoteService,
-    private notificationService: NotificationService,
-    private overdueService: OverdueService
+    private quoteService: QuoteService
   ) {}
 
   // Getter for dark mode state from theme service
@@ -182,9 +171,6 @@ export class Dashboard implements OnInit, OnDestroy {
     
     // Load quote of the day (will use cache if available)
     this.loadQuoteOfTheDay();
-
-    // Initialize notifications
-    this.initializeNotifications();
     
     // Load random fact
     this.loadRandomFact();
@@ -214,8 +200,6 @@ export class Dashboard implements OnInit, OnDestroy {
       this.activeSection = 'books';
     } else if (currentUrl.includes('/dashboard/cataloging')) {
       this.activeSection = 'cataloging';
-    } else if (currentUrl.includes('/dashboard/archived-books')) {
-      this.activeSection = 'archived-books';
     } else if (currentUrl.includes('/dashboard/students')) {
       this.activeSection = 'students';
     } else if (currentUrl.includes('/dashboard/admins')) {
@@ -1137,60 +1121,6 @@ export class Dashboard implements OnInit, OnDestroy {
         this.factError = 'Failed to load a fact. Please try again later.';
         this.currentFact = 'Could not fetch a fact at this time.';
         console.error('Error fetching random fact:', error);
-      }
-    });
-  }
-
-  // Initialize notifications for admin
-  private initializeNotifications(): void {
-    // Add some test notifications for admin
-    this.addTestAdminNotifications();
-
-    // Subscribe to notifications for admin
-    this.notificationService.getNotificationsForRecipient('admin', 'admin')
-      .subscribe(notifications => {
-        this.notifications = notifications;
-        this.adminNotifications = notifications;
-        this.unreadNotificationCount = notifications.filter(n => !n.isRead).length;
-      });
-  }
-
-  // Add test notifications for admin demonstration
-  private addTestAdminNotifications(): void {
-    // Check if test notifications already exist
-    this.notificationService.getNotifications().subscribe(notifications => {
-      const hasTestNotifications = notifications.some(n => n.message.includes('admin test notification'));
-
-      if (!hasTestNotifications) {
-        // Add sample admin notifications
-        this.notificationService.addNotification({
-          type: 'borrow_request',
-          title: 'New Borrow Request',
-          message: 'Student John Doe has requested to borrow "Advanced JavaScript Concepts" - admin test notification',
-          recipientType: 'admin',
-          recipientId: 'admin',
-          relatedBookTitle: 'Advanced JavaScript Concepts',
-          actionRequired: true
-        });
-
-        this.notificationService.addNotification({
-          type: 'overdue_reminder',
-          title: 'Overdue Book Alert',
-          message: 'Book "React Development Guide" is 3 days overdue by student Jane Smith - admin test notification',
-          recipientType: 'admin',
-          recipientId: 'admin',
-          relatedBookTitle: 'React Development Guide',
-          actionRequired: true
-        });
-
-        this.notificationService.addNotification({
-          type: 'book_returned',
-          title: 'System Maintenance',
-          message: 'Scheduled system maintenance will occur tonight at 2 AM - admin test notification',
-          recipientType: 'admin',
-          recipientId: 'admin',
-          actionRequired: false
-        });
       }
     });
   }

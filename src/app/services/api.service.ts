@@ -389,7 +389,7 @@ export class ApiService {
     return this.post(environment.endpoints.adminAuth + `/change-admin-password/${adminId}`, passwordData);
   }
 
-  getAdminAuditLogs(adminId?: string, limit?: number, offset?: number): Observable<ApiResponse<AdminAuditLog[]>> {
+  getAdminAuditLogs(adminId?: string, limit?: number, offset?: number): Observable<ApiResponse> {
     let endpoint = environment.endpoints.adminAuth + '/admin-audit-logs';
 
     if (adminId) {
@@ -400,13 +400,7 @@ export class ApiService {
     if (limit) params.limit = limit.toString();
     if (offset) params.offset = offset.toString();
 
-    // Convert params to query string
-    const queryString = new URLSearchParams(params).toString();
-    if (queryString) {
-      endpoint += `?${queryString}`;
-    }
-
-    return this.get<AdminAuditLog[]>(endpoint);
+    return this.get(endpoint, { params });
   }
 
   // Faculty Management endpoints
@@ -452,29 +446,6 @@ export class ApiService {
     const params: any = {};
     if (limit) params.limit = limit.toString();
     if (offset) params.offset = offset.toString();
-
-    return this.get(endpoint, { params });
-  }
-
-  // Student Login Events Methods
-  getStudentLoginEvents(limit?: number, offset?: number, startDate?: string, endDate?: string): Observable<ApiResponse<StudentLoginEvent[]>> {
-    let endpoint = '/student-login-events';
-    
-    const params: any = {};
-    if (limit) params.limit = limit.toString();
-    if (offset) params.offset = offset.toString();
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
-
-    return this.get(endpoint, { params });
-  }
-
-  getStudentLoginStats(startDate?: string, endDate?: string): Observable<ApiResponse<StudentLoginStats>> {
-    let endpoint = '/student-login-events/stats';
-    
-    const params: any = {};
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
 
     return this.get(endpoint, { params });
   }

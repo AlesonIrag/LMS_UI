@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
-import { ApiService } from '../../services/api.service';
-import { ToastService } from '../../services/toast.service';
 
 interface Student {
   id: string;
@@ -22,7 +20,7 @@ interface Reservation {
   reservedDate: string;
   holdUntil: string;
   priority: 'High' | 'Normal' | 'Low';
-  status: 'Pending' | 'Active' | 'Ready' | 'Expired' | 'Fulfilled';
+  status: 'Pending' | 'Ready' | 'Expired' | 'Fulfilled';
 }
 
 interface ReservationStats {
@@ -42,20 +40,150 @@ interface ReservationStats {
 export class ReservationsComponent implements OnInit {
 
   stats: ReservationStats = {
-    activeReservations: 0,
-    readyForPickup: 0,
-    expiredHolds: 0,
-    fulfilledToday: 0
+    activeReservations: 45,
+    readyForPickup: 12,
+    expiredHolds: 3,
+    fulfilledToday: 8
   };
 
   // All reservations data
-  allReservations: Reservation[] = [];
-  reservations: Reservation[] = [];
-
-  // Loading states
-  isLoading: boolean = false;
-  error: string | null = null;
-
+  reservations: Reservation[] = [
+    {
+      id: 'R001',
+      student: { id: 'S2024001', name: 'Sofia Martinez' },
+      book: { title: 'Data Structures and Algorithms', author: 'Thomas Cormen' },
+      reservedDate: '2024-07-20',
+      holdUntil: '2024-07-30',
+      priority: 'High',
+      status: 'Ready'
+    },
+    {
+      id: 'R002',
+      student: { id: 'S2024002', name: 'Miguel Torres' },
+      book: { title: 'Organic Chemistry', author: 'Paula Bruice' },
+      reservedDate: '2024-07-18',
+      holdUntil: '2024-07-28',
+      priority: 'Normal',
+      status: 'Pending'
+    },
+    {
+      id: 'R003',
+      student: { id: 'S2024003', name: 'Isabella Garcia' },
+      book: { title: 'World Literature', author: 'Various Authors' },
+      reservedDate: '2024-07-15',
+      holdUntil: '2024-07-25',
+      priority: 'Low',
+      status: 'Expired'
+    },
+    {
+      id: 'R004',
+      student: { id: 'S2024004', name: 'Diego Fernandez' },
+      book: { title: 'Calculus: Early Transcendentals', author: 'James Stewart' },
+      reservedDate: '2024-07-22',
+      holdUntil: '2024-08-01',
+      priority: 'High',
+      status: 'Ready'
+    },
+    {
+      id: 'R005',
+      student: { id: 'S2024005', name: 'Carmen Reyes' },
+      book: { title: 'Introduction to Psychology', author: 'David Myers' },
+      reservedDate: '2024-07-19',
+      holdUntil: '2024-07-29',
+      priority: 'Normal',
+      status: 'Pending'
+    },
+    {
+      id: 'R006',
+      student: { id: 'S2024006', name: 'Antonio Rivera' },
+      book: { title: 'Operating Systems', author: 'Abraham Silberschatz' },
+      reservedDate: '2024-07-23',
+      holdUntil: '2024-08-02',
+      priority: 'High',
+      status: 'Pending'
+    },
+    {
+      id: 'R007',
+      student: { id: 'S2024007', name: 'Elena Morales' },
+      book: { title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell' },
+      reservedDate: '2024-07-17',
+      holdUntil: '2024-07-27',
+      priority: 'High',
+      status: 'Ready'
+    },
+    {
+      id: 'R008',
+      student: { id: 'S2024008', name: 'Ricardo Santos' },
+      book: { title: 'Database System Concepts', author: 'Abraham Silberschatz' },
+      reservedDate: '2024-07-21',
+      holdUntil: '2024-07-31',
+      priority: 'Normal',
+      status: 'Pending'
+    },
+    {
+      id: 'R009',
+      student: { id: 'S2024009', name: 'Patricia Gomez' },
+      book: { title: 'Computer Networking', author: 'Kurose & Ross' },
+      reservedDate: '2024-07-16',
+      holdUntil: '2024-07-26',
+      priority: 'Low',
+      status: 'Expired'
+    },
+    {
+      id: 'R010',
+      student: { id: 'S2024010', name: 'Javier Hernandez' },
+      book: { title: 'Software Engineering', author: 'Ian Sommerville' },
+      reservedDate: '2024-07-24',
+      holdUntil: '2024-08-03',
+      priority: 'High',
+      status: 'Pending'
+    },
+    {
+      id: 'R011',
+      student: { id: 'S2024011', name: 'Monica Delgado' },
+      book: { title: 'Machine Learning', author: 'Tom Mitchell' },
+      reservedDate: '2024-07-22',
+      holdUntil: '2024-08-01',
+      priority: 'Normal',
+      status: 'Ready'
+    },
+    {
+      id: 'R012',
+      student: { id: 'S2024012', name: 'Carlos Espinoza' },
+      book: { title: 'Web Development with React', author: 'Robin Wieruch' },
+      reservedDate: '2024-07-19',
+      holdUntil: '2024-07-29',
+      priority: 'Normal',
+      status: 'Pending'
+    },
+    {
+      id: 'R013',
+      student: { id: 'S2024013', name: 'Andrea Castro' },
+      book: { title: 'Cybersecurity Basics', author: 'Chuck Easttom' },
+      reservedDate: '2024-07-14',
+      holdUntil: '2024-07-24',
+      priority: 'Low',
+      status: 'Expired'
+    },
+    {
+      id: 'R014',
+      student: { id: 'S2024014', name: 'Luis Navarro' },
+      book: { title: 'Mobile App Development', author: 'Jakob Jenkov' },
+      reservedDate: '2024-07-25',
+      holdUntil: '2024-08-04',
+      priority: 'High',
+      status: 'Pending'
+    },
+    {
+      id: 'R015',
+      student: { id: 'S2024015', name: 'Gabriela Flores' },
+      book: { title: 'Cloud Computing', author: 'Barrie Sosinsky' },
+      reservedDate: '2024-07-23',
+      holdUntil: '2024-08-02',
+      priority: 'Normal',
+      status: 'Ready'
+    }
+  ];
 
   // Pagination properties
   currentPage: number = 1;
@@ -72,19 +200,7 @@ export class ReservationsComponent implements OnInit {
   sortColumn: string = 'id';
   sortDirection: 'asc' | 'desc' = 'asc';
 
-  // Modal properties
-  showFulfillModal: boolean = false;
-  showRejectModal: boolean = false;
-  selectedReservationId: string | null = null;
-  isProcessingFulfill: boolean = false;
-  isProcessingReject: boolean = false;
-  rejectReason: string = '';
-
-  constructor(
-    private themeService: ThemeService,
-    private apiService: ApiService,
-    private toastService: ToastService
-  ) { }
+  constructor(private themeService: ThemeService) { }
 
   // Getter for dark mode state from theme service
   get isDarkMode(): boolean {
@@ -92,207 +208,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadReservations();
-  }
-
-  // Load reservations from API
-  loadReservations(): void {
-    this.isLoading = true;
-    this.error = null;
-
-    this.apiService.get('/borrowing/reservations').subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          this.allReservations = response.data;
-          this.updateStats();
-          this.applyFiltersAndSort();
-          console.log('✅ Reservations loaded successfully:', response.data);
-        } else {
-          this.error = 'Failed to load reservations';
-          console.error('❌ Failed to load reservations:', response);
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.error = 'Failed to load reservations';
-        this.isLoading = false;
-        console.error('❌ Error loading reservations:', error);
-      }
-    });
-  }
-
-  // Update statistics based on current reservations
-  updateStats(): void {
-    this.stats = {
-      activeReservations: this.allReservations.filter(r => r.status === 'Active').length,
-      readyForPickup: this.allReservations.filter(r => r.status === 'Ready').length,
-      expiredHolds: this.allReservations.filter(r => r.status === 'Expired').length,
-      fulfilledToday: this.allReservations.filter(r => {
-        const today = new Date().toISOString().split('T')[0];
-        return r.status === 'Fulfilled' && r.reservedDate === today;
-      }).length
-    };
-  }
-
-  // Show fulfill confirmation modal
-  fulfillReservation(reservationId: string): void {
-    this.selectedReservationId = reservationId;
-    this.showFulfillModal = true;
-  }
-
-  // Confirm fulfill reservation
-  confirmFulfillReservation(): void {
-    if (!this.selectedReservationId || this.isProcessingFulfill) return;
-
-    this.isProcessingFulfill = true;
-
-    this.apiService.post(`/borrowing/fulfill-reservation/${this.selectedReservationId}`, {}).subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          console.log('✅ Reservation fulfilled successfully:', response);
-          // Reload reservations to reflect changes
-          this.loadReservations();
-          this.toastService.success(
-            'Reservation Fulfilled',
-            `Book "${response.data.bookTitle}" is now borrowed with 2-day loan period.`
-          );
-        } else {
-          console.error('❌ Failed to fulfill reservation:', response);
-          this.toastService.error(
-            'Fulfillment Failed',
-            response.error || 'Failed to fulfill reservation. Please try again.'
-          );
-        }
-        this.showFulfillModal = false;
-        this.selectedReservationId = null;
-        this.isProcessingFulfill = false;
-      },
-      error: (error) => {
-        console.error('❌ Error fulfilling reservation:', error);
-        this.toastService.error(
-          'Fulfillment Failed',
-          error.error?.error || 'Failed to fulfill reservation. Please try again.'
-        );
-        this.showFulfillModal = false;
-        this.selectedReservationId = null;
-        this.isProcessingFulfill = false;
-      }
-    });
-  }
-
-  // Cancel fulfill reservation
-  cancelFulfillReservation(): void {
-    this.showFulfillModal = false;
-    this.selectedReservationId = null;
-  }
-
-  // Show reject confirmation modal
-  rejectReservation(reservationId: string): void {
-    this.selectedReservationId = reservationId;
-    this.rejectReason = '';
-    this.showRejectModal = true;
-  }
-
-  // Confirm reject reservation
-  confirmRejectReservation(): void {
-    if (!this.selectedReservationId || this.isProcessingReject) return;
-
-    if (!this.rejectReason.trim()) {
-      this.toastService.warning('Reason Required', 'Please provide a reason for rejection.');
-      return;
-    }
-
-    this.isProcessingReject = true;
-
-    this.apiService.post(`/borrowing/reject-reservation/${this.selectedReservationId}`, {
-      reason: this.rejectReason.trim()
-    }).subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          console.log('✅ Reservation rejected successfully:', response);
-          // Reload reservations to reflect changes
-          this.loadReservations();
-          this.toastService.success(
-            'Reservation Rejected',
-            'Student has been notified of the rejection.'
-          );
-        } else {
-          console.error('❌ Failed to reject reservation:', response);
-          this.toastService.error(
-            'Rejection Failed',
-            response.error || 'Failed to reject reservation. Please try again.'
-          );
-        }
-        this.showRejectModal = false;
-        this.selectedReservationId = null;
-        this.rejectReason = '';
-        this.isProcessingReject = false;
-      },
-      error: (error) => {
-        console.error('❌ Error rejecting reservation:', error);
-        this.toastService.error(
-          'Rejection Failed',
-          error.error?.error || 'Failed to reject reservation. Please try again.'
-        );
-        this.showRejectModal = false;
-        this.selectedReservationId = null;
-        this.rejectReason = '';
-        this.isProcessingReject = false;
-      }
-    });
-  }
-
-  // Cancel reject reservation
-  cancelRejectReservation(): void {
-    this.showRejectModal = false;
-    this.selectedReservationId = null;
-    this.rejectReason = '';
-  }
-
-  // Send notification to student (this is what the notify button does)
-  notifyStudent(reservationId: string): void {
-    this.apiService.post(`/borrowing/notify-reservation/${reservationId}`, {}).subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          this.toastService.success(
-            'Notification Sent',
-            'Student has been notified about their reservation status.'
-          );
-        } else {
-          this.toastService.error(
-            'Notification Failed',
-            'Failed to send notification. Please try again.'
-          );
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error sending notification:', error);
-        this.toastService.error(
-          'Notification Failed',
-          'Failed to send notification. Please try again.'
-        );
-      }
-    });
-  }
-
-  // Notify user about reservation
-  notifyUser(reservationId: string): void {
-    // This would typically send a notification to the user
-    alert('Notification sent to user about their reservation.');
-  }
-
-  // Cancel reservation
-  cancelReservation(reservationId: string): void {
-    if (!confirm('Are you sure you want to cancel this reservation?')) {
-      return;
-    }
-
-    // For now, we'll just remove it from the local array
-    // In a real implementation, this would call an API endpoint
-    this.allReservations = this.allReservations.filter(r => r.id !== reservationId);
-    this.updateStats();
     this.applyFiltersAndSort();
-    alert('Reservation cancelled successfully.');
   }
 
   getTextClasses(): string {
@@ -303,12 +219,6 @@ export class ReservationsComponent implements OnInit {
     return this.isDarkMode ? 'text-gray-400' : 'text-gray-600';
   }
 
-  getInputClasses(): string {
-    return this.isDarkMode
-      ? 'bg-gray-700 border-gray-600 text-white'
-      : 'bg-white border-gray-300 text-gray-900';
-  }
-
   getCardClasses(): string {
     return this.isDarkMode 
       ? 'bg-gray-800 border-gray-700 text-white' 
@@ -317,11 +227,9 @@ export class ReservationsComponent implements OnInit {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'Pending':
-        return 'bg-orange-100 text-orange-800';
       case 'Ready':
         return 'bg-green-100 text-green-800';
-      case 'Active':
+      case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'Expired':
         return 'bg-red-100 text-red-800';
@@ -347,7 +255,7 @@ export class ReservationsComponent implements OnInit {
   
   // Apply filters and sorting
   private applyFiltersAndSort(): void {
-    let filtered = [...this.allReservations];
+    let filtered = [...this.reservations];
 
     // Apply search filter
     if (this.searchTerm.trim()) {

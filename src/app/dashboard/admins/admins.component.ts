@@ -418,11 +418,6 @@ export class AdminsComponent implements OnInit, OnDestroy {
           // Handle specific error messages
           const errorMessage = response.error || response.message || 'Failed to create admin';
           this.createFormError = this.getFormattedErrorMessage(errorMessage);
-          
-          // Auto-dismiss after 5 seconds
-          setTimeout(() => {
-            this.createFormError = null;
-          }, 5000);
         }
 
         this.loading = false;
@@ -447,11 +442,6 @@ export class AdminsComponent implements OnInit, OnDestroy {
         }
 
         this.createFormError = this.getFormattedErrorMessage(errorMessage);
-        
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-          this.createFormError = null;
-        }, 5000);
       }
     });
 
@@ -630,35 +620,25 @@ export class AdminsComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Helper method to set form error with auto-dismiss
-  private setCreateFormError(message: string): void {
-    this.createFormError = message;
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-      this.createFormError = null;
-    }, 5000);
-  }
-
   // Validation methods
   private validateCreateForm(): boolean {
     if (!this.createForm.firstName.trim()) {
-      this.setCreateFormError('First name is required');
+      this.createFormError = 'First name is required';
       return false;
     }
 
     if (!this.createForm.lastName.trim()) {
-      this.setCreateFormError('Last name is required');
+      this.createFormError = 'Last name is required';
       return false;
     }
 
     if (!this.createForm.email.trim()) {
-      this.setCreateFormError('Email address is required');
+      this.createFormError = 'Email address is required';
       return false;
     }
 
     if (!this.isValidEmail(this.createForm.email)) {
-      this.setCreateFormError('Please enter a valid email address');
+      this.createFormError = 'Please enter a valid email address';
       return false;
     }
 
@@ -667,28 +647,28 @@ export class AdminsComponent implements OnInit, OnDestroy {
       admin.email.toLowerCase() === this.createForm.email.trim().toLowerCase()
     );
     if (emailExists) {
-      this.setCreateFormError('An admin with this email address already exists');
+      this.createFormError = 'An admin with this email address already exists';
       return false;
     }
 
     if (!this.createForm.password) {
-      this.setCreateFormError('Password is required');
+      this.createFormError = 'Password is required';
       return false;
     }
 
     if (this.createForm.password.length < 6) {
-      this.setCreateFormError('Password must be at least 6 characters long');
+      this.createFormError = 'Password must be at least 6 characters long';
       return false;
     }
 
     if (this.createForm.password !== this.createForm.confirmPassword) {
-      this.setCreateFormError('Passwords do not match');
+      this.createFormError = 'Passwords do not match';
       return false;
     }
 
     // Validate middle initial if provided
     if (this.createForm.middleInitial && this.createForm.middleInitial.length > 1) {
-      this.setCreateFormError('Middle initial should be only one character');
+      this.createFormError = 'Middle initial should be only one character';
       return false;
     }
 

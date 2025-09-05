@@ -16,7 +16,6 @@ import { SystemSettingsComponent } from './dashboard/system-settings/system-sett
 import { ActivityLogsComponent } from './dashboard/activity-logs/activity-logs.component';
 import { ProfileComponent } from './dashboard/profile/profile.component';
 import { CatalogingRouteComponent } from './dashboard/cataloging/cataloging-route.component';
-import { ArchivedBooksComponent } from './dashboard/archived-books/archived-books.component';
 import { StudentDashboardComponent } from './student-dashboard/student-dashboard.component';
 import { StudentProfileComponent } from './student-profile/student-profile.component';
 import { FacultyDashboardComponent } from './faculty-dashboard/faculty-dashboard.component';
@@ -61,20 +60,11 @@ export const routes: Routes = [
             // Additional dashboard components
             { path: 'borrowing', component: BorrowingComponent },
             { path: 'reservations', component: ReservationsComponent },
-            { path: 'archived-books', component: ArchivedBooksComponent },
             { path: 'faculty', component: FacultyComponent },
             { path: 'system-settings', component: SystemSettingsComponent },
             { path: 'logs', component: ActivityLogsComponent },
             { path: 'cataloging', component: CatalogingRouteComponent },
-<<<<<<< HEAD
-            { path: 'profile', component: ProfileComponent },
-            // New login/logout events component
-            { path: 'login-logout-events', component: LoginLogoutEventsComponent },
-            // New student login/logout events component
-            { path: 'student-login-logout', component: StudentLoginLogoutComponent }
-=======
             { path: 'profile', component: ProfileComponent }
->>>>>>> origin/cornejo_pm
         ]
     },
     // Standalone profile page (outside dashboard layout)
@@ -91,7 +81,6 @@ export const routes: Routes = [
     { path: 'test', component: TestComponent },
     // 404 Not Found - This must be the last route
     { path: '**', component: NotFoundComponent }
-<<<<<<< HEAD
 ];
 =======
 ];

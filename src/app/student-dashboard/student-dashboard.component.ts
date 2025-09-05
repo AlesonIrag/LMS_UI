@@ -6,12 +6,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { WeatherLoggerService } from '../services/weather-logger.service';
 import { StudentAuthService } from '../services/student-auth.service';
-import { StudentEventTrackerService } from '../services/student-event-tracker.service';
 import { ThemeService } from '../services/theme.service';
 import { AnnouncementService, Announcement, NewsItem } from '../services/announcement.service';
-import { BookService, StudentBook } from '../services/book.service';
-import { NotificationService, Notification } from '../services/notification.service';
-
 
 interface WeatherResponse {
   success: boolean;
@@ -109,10 +105,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   profileModalTop: string = '70px';
   profileModalRight: string = '20px';
 
-
-
-
-
   @ViewChild('profileButton', { static: false }) profileButton!: ElementRef;
 
   // Profile photo state
@@ -189,37 +181,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   availableCategories: string[] = [];
   availableSubjects: string[] = [];
 
-  // Sorting properties
-  sortColumn: string = 'title';
-  sortDirection: 'asc' | 'desc' = 'asc';
-
-  // Modal states
-  showBookDetailsModal: boolean = false;
-  showReserveModal: boolean = false;
-  showBorrowConfirmModal: boolean = false;
-  showNotificationModal: boolean = false;
-  selectedBook: StudentBook | null = null;
-  reserveDate: string = '';
-  reserveEndDate: string = '';
-
-  // Notifications
-  notifications: Notification[] = [];
-  studentNotifications: Notification[] = [];
-  unreadNotificationCount: number = 0;
-  selectedNotification: Notification | null = null;
-  showNotificationDropdown: boolean = false;
-  notificationDropdownPosition = { top: 0, right: 0 };
-
-  // Success message properties
-  showSuccessMessage: boolean = false;
-  successMessage: string = '';
-
-  // Sidebar visibility control
-  get shouldHideSidebar(): boolean {
-    // Hide sidebar when not in dashboard view
-    return this.currentView !== 'dashboard';
-  }
-
   // News and announcements - now dynamic
   latestNews: NewsItem[] = [];
   announcements: Announcement[] = [];
@@ -232,12 +193,9 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private weatherLogger: WeatherLoggerService,
     private studentAuthService: StudentAuthService,
-    private studentEventTracker: StudentEventTrackerService,
     private router: Router,
     private themeService: ThemeService,
-    private announcementService: AnnouncementService,
-    private bookService: BookService,
-    private notificationService: NotificationService
+    private announcementService: AnnouncementService
   ) {}
 
   // Getter for dark mode state from theme service
@@ -260,7 +218,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     this.loadQuoteOfTheDay();
     this.loadRandomFact();
     this.loadAnnouncements();
-    this.initializeNotifications();
 
     // Update weather every 10 minutes
     this.weatherSubscription = interval(600000).subscribe(() => {
@@ -410,11 +367,11 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     }
 
     if (iconElement) {
-      iconElement.innerHTML = `<path fill="currentColor" d="${iconPath}"/>`;
+      iconElement.innerHTML = `<path d="${iconPath}"/>`;
     }
     
     if (iconElementMobile) {
-      iconElementMobile.innerHTML = `<path fill="currentColor" d="${iconPath}"/>`;
+      iconElementMobile.innerHTML = `<path d="${iconPath}"/>`;
     }
   }
 
@@ -755,53 +712,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   }
 
 
-
-  // Utility methods for announcements and news
-  getTimeAgo(dateString: string | Date): string {
-    if (dateString instanceof Date) {
-      const now = new Date();
-      const diffInMs = now.getTime() - dateString.getTime();
-      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-      if (diffInMinutes < 1) return 'Just now';
-      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-      if (diffInHours < 24) return `${diffInHours}h ago`;
-      if (diffInDays < 7) return `${diffInDays}d ago`;
-      return dateString.toLocaleDateString();
-    }
-    return this.announcementService.getTimeAgo(dateString);
-  }
-
-  // Helper method to format time ago for student login events
-  getFormattedDate(dateString: string): string {
-    return this.announcementService.getFormattedDate(dateString);
-  }
-
-  getFormattedDateTime(dateString: string): string {
-    return this.announcementService.getFormattedDateTime(dateString);
-  }
-
-
-
-  getTypeIcon(type: string): string {
-    switch (type) {
-      case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
-      case 'success': return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
-      case 'error': return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
-      default: return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
-    }
-  }
-
-  getTypeColor(type: string): string {
-    switch (type) {
-      case 'warning': return 'text-yellow-500';
-      case 'success': return 'text-green-500';
-      case 'error': return 'text-red-500';
-      default: return 'text-blue-500';
-    }
-  }
 
   getNewsColor(color: string): string {
     switch (color) {
@@ -2115,4 +2025,159 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     return dueDate.toLocaleDateString();
   }
 
+  // Date methods
+  getCurrentDate(): string {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // Quote of the Day methods
+  private loadQuoteOfTheDay(): void {
+    console.log('🎯 === LOADING STUDENT QUOTE OF THE DAY ===');
+    this.isQuoteLoading = true;
+    this.quoteError = null;
+
+    // Fetch quote with student-specific categories
+    this.fetchStudentQuote().subscribe({
+      next: (response: any) => {
+        console.log('🔍 Student quote response:', response);
+        if (response && (response.quote || response.text)) {
+          this.currentQuote = {
+            text: response.quote || response.text || 'No quote available',
+            author: response.author || 'Unknown Author'
+          };
+          this.quoteError = null;
+          console.log('✅ Student quote loaded successfully:', this.currentQuote);
+        } else {
+          this.quoteError = 'Failed to load quote';
+          console.log('❌ Student quote loading failed:', this.quoteError);
+        }
+        this.isQuoteLoading = false;
+      },
+      error: (error: any) => {
+        console.error('❌ Error loading student quote:', error);
+        this.quoteError = 'Failed to load quote of the day';
+        this.isQuoteLoading = false;
+        
+        // Fallback quote for students
+        this.currentQuote = {
+          text: "The only way to do great work is to love what you do.",
+          author: "Steve Jobs"
+        };
+      }
+    });
+  }
+
+  private fetchStudentQuote() {
+    // Student-specific categories: motivation, student, education, inspiration
+    const categories = ['motivation', 'student', 'education', 'inspiration'];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    
+    const url = `https://benedictocollege-quote-api.netlify.app/.netlify/functions/random?category=${randomCategory}`;
+    
+    console.log('🌐 Making student quote API request to:', url);
+    return this.http.get(url);
+  }
+
+  private loadRandomFact(): void {
+    this.http.get<any>('https://uselessfacts.jsph.pl/api/v2/facts/random').subscribe({
+      next: (data) => {
+        this.randomFact = data.text;
+      },
+      error: (error) => {
+        this.factError = 'Failed to load a fact. Please try again later.';
+        this.randomFact = 'Could not fetch a fact at this time.';
+        console.error('Error fetching random fact:', error);
+      }
+    });
+  }
+
+  // Greeting methods
+  getGreeting(): string {
+    const firstName = this.currentUserFirstName;
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Good Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Good Afternoon';
+    } else {
+      timeGreeting = 'Good Evening';
+    }
+
+    return `${timeGreeting}, ${firstName}!`;
+  }
+
+  getMobileGreeting(): string {
+    const firstName = this.currentUserFirstName;
+
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+
+    if (hour < 12) {
+      timeGreeting = 'Morning';
+    } else if (hour < 17) {
+      timeGreeting = 'Afternoon';
+    } else {
+      timeGreeting = 'Evening';
+    }
+
+    return `Good ${timeGreeting}, ${firstName}!`;
+  }
+
+  // Announcement loading methods
+  private loadAnnouncements(): void {
+    // Load announcements for students
+    const announcementSub = this.announcementService.getAnnouncementsByAudience('students').subscribe(announcements => {
+      this.announcements = announcements;
+    });
+    this.announcementSubscriptions.push(announcementSub);
+
+    // Load news items
+    const newsSub = this.announcementService.getActiveNews().subscribe(news => {
+      this.latestNews = news;
+    });
+    this.announcementSubscriptions.push(newsSub);
+  }
+
+  // Utility methods for announcements
+  getTimeAgo(dateString: string): string {
+    return this.announcementService.getTimeAgo(dateString);
+  }
+
+  getTypeIcon(type: string): string {
+    switch (type) {
+      case 'warning': return 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z';
+      case 'success': return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'error': return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+      default: return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    }
+  }
+
+  getTypeColor(type: string): string {
+    switch (type) {
+      case 'warning': return 'text-yellow-500';
+      case 'success': return 'text-green-500';
+      case 'error': return 'text-red-500';
+      default: return 'text-blue-500';
+    }
+  }
+
+  getNewsColor(color: string): string {
+    switch (color) {
+      case 'red': return 'bg-red-500';
+      case 'green': return 'bg-green-500';
+      case 'blue': return 'bg-blue-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'purple': return 'bg-purple-500';
+      default: return 'bg-blue-500';
+    }
+  }
 }
