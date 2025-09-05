@@ -113,22 +113,6 @@ Ready for backend integration with endpoints for:
 - Active user tracking
 - News and announcements management
 
-## New Components
-
-### Login/Logout Events Component
-A new component that displays admin login and logout events for the current week. This component provides administrators with visibility into system access patterns and security monitoring.
-
-Located at: `src/app/dashboard/login-logout-events/`
-Route: `/dashboard/login-logout-events`
-
-Features:
-- Displays login/logout events from the past 7 days
-- Shows statistics for total events, logins, and logouts
-- Provides visual indicators for different event types (login/logout)
-- Responsive design that works on all device sizes
-- Dark mode support
-- Refresh functionality to update data
-
 ## Usage
 
 ### Development

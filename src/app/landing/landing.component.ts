@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-landing',
@@ -13,12 +14,35 @@ export class LandingComponent implements OnInit, OnDestroy {
   private slides: NodeListOf<Element> | null = null;
   private slideInterval: any;
 
+  constructor(private http: HttpClient) {}
+
   ngOnInit() {
     // Enhanced mobile navigation functionality
     this.initializeMobileNavigation();
 
     // Background slideshow functionality
     this.initializeSlideshow();
+    
+    // Fetch and update credit year range
+    this.loadCreditYearRange();
+  }
+  
+  private loadCreditYearRange(): void {
+    // Fetch credit year range from backend
+    this.http.get<any>('http://localhost:3000/api/v1/system-settings/credit-year-range').subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const creditYearRangeElement = document.getElementById('creditYearRange');
+          if (creditYearRangeElement) {
+            creditYearRangeElement.textContent = response.data.creditYearRange;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load credit year range:', error);
+        // Keep default value
+      }
+    });
   }
 
   ngOnDestroy() {

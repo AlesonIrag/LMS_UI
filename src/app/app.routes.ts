@@ -34,10 +34,13 @@ import { FacultyGuard } from './guards/faculty.guard';
 
 import { TestComponent } from './test/test.component';
 
+<<<<<<< HEAD
 // Import the new components
 import { LoginLogoutEventsComponent } from './dashboard/login-logout-events/login-logout-events.component';
 import { StudentLoginLogoutComponent } from './dashboard/student-login-logout/student-login-logout.component';
 
+=======
+>>>>>>> origin/cornejo_pm
 export const routes: Routes = [
     { path: '', component: LandingComponent },
     { path: 'login', component: LoginComponent },
@@ -63,11 +66,15 @@ export const routes: Routes = [
             { path: 'system-settings', component: SystemSettingsComponent },
             { path: 'logs', component: ActivityLogsComponent },
             { path: 'cataloging', component: CatalogingRouteComponent },
+<<<<<<< HEAD
             { path: 'profile', component: ProfileComponent },
             // New login/logout events component
             { path: 'login-logout-events', component: LoginLogoutEventsComponent },
             // New student login/logout events component
             { path: 'student-login-logout', component: StudentLoginLogoutComponent }
+=======
+            { path: 'profile', component: ProfileComponent }
+>>>>>>> origin/cornejo_pm
         ]
     },
     // Standalone profile page (outside dashboard layout)
@@ -84,4 +91,8 @@ export const routes: Routes = [
     { path: 'test', component: TestComponent },
     // 404 Not Found - This must be the last route
     { path: '**', component: NotFoundComponent }
+<<<<<<< HEAD
 ];
+=======
+];
+>>>>>>> origin/cornejo_pm

@@ -1,309 +1,410 @@
-# Library Management System - AI - System Index
+# 📚 Library Management System - Complete System Index
 
-## Project Overview
-This is a full-stack Library Management System built with Angular (frontend) and Node.js/Express (backend). The system includes features for managing books, students, faculty, administrators, borrowing, and more. It was designed for Benedicto College with professional UI/UX and separated deployment capabilities.
+## 🏗️ System Architecture Overview
 
-## Project Structure
+The Benedicto College Library Management System is a modern, full-stack web application built with:
+- **Frontend**: Angular 18+ with TypeScript, Tailwind CSS
+- **Backend**: Node.js with Express.js
+- **Database**: MySQL/MariaDB
+- **Authentication**: JWT-based authentication system
+- **File Storage**: Professional image storage with Sharp optimization
 
-### Root Directory
-- `src/` - Frontend Angular application
-- `backend-api/` - Backend Node.js/Express API
-- Configuration files (angular.json, package.json, tsconfig.json, etc.)
-- Deployment scripts and guides
+## 📁 Project Structure
 
-### Frontend (Angular)
-Location: `src/app/`
+```
+Library-Management-System-AI/
+├── src/                           # Angular Frontend Application
+│   ├── app/                       # Main application components
+│   ├── assets/                    # Static assets (images, videos, gifs)
+│   ├── environments/              # Environment configurations
+│   └── styles.css                 # Global styles
+├── backend-api/                   # Node.js Backend API
+│   ├── config/                    # Database and configuration files
+│   ├── middleware/                # Security, auth, and validation middleware
+│   ├── routes/                    # API route handlers
+│   ├── utils/                     # Utility functions and loggers
+│   ├── uploads/                   # File upload storage
+│   └── server.js                  # Main server entry point
+├── dist/                          # Built application files
+├── docs/                          # Documentation files
+└── Configuration Files            # Package.json, Docker, etc.
+```
 
-Main Components:
-- Landing page (`/`)
-- Login systems (Student, Admin, Faculty)
-- Dashboards (Admin, Student, Faculty)
-- Book management
-- User management (Students, Faculty, Admins)
-- Borrowing/reservation systems
-- Profile management
-- Support pages (Privacy Policy, Terms of Service, etc.)
+## 🎯 Core Features
 
-Routing:
-- Main routes defined in `src/app/app.routes.ts`
-- Guarded routes for different user types (AdminGuard, StudentGuard, FacultyGuard)
+### 1. Multi-User Authentication System
+- **Student Login**: Student ID (YYYY-NNNNN format) + password
+- **Faculty Login**: Faculty ID + password  
+- **Admin Login**: Email + password
+- **JWT Token Management**: Secure token-based authentication
+- **Role-Based Access Control**: Different permissions per user type
 
-### Backend (Node.js/Express)
-Location: `backend-api/`
+### 2. Dashboard Systems
+- **Admin Dashboard**: Complete system management
+- **Student Dashboard**: Personal library management
+- **Faculty Dashboard**: Extended library access
+- **Real-time Weather Integration**: OpenWeatherMap API
+- **Activity Logging**: Comprehensive system logging
 
-Main API Endpoints:
-- `/api/v1/auth` - Student authentication and management
-- `/api/v1/adminauth` - Administrator authentication and management
-- `/api/v1/facultyauth` - Faculty authentication and management
-- `/api/v1/books` - Book management
-- `/api/v1/borrowing` - Borrowing and reservation system
-- `/api/v1/weather` - Weather information for Cebu City
-- `/api/v1/uploads` - File upload handling
-- `/api/v1/password-reset` - Password reset functionality
-- `/api/v1/posts` - Posts management
-- `/api/v1/reactions` - Reaction system
+### 3. Profile Management
+- **Profile Photo Upload**: Professional image storage with Sharp optimization
+- **Profile Information**: Detailed user profiles with contact information
+- **Account Settings**: Password management and preferences
 
-Key Features:
-- JWT-based authentication
-- Rate limiting for security
-- CORS configuration for cross-origin requests
-- Database integration (MariaDB/MySQL)
-- File upload capabilities
-- Security middleware (helmet, compression)
-- Logging system
-- Audit trails for admin and faculty actions
+## 🔧 Frontend Components (Angular)
 
-### Key Dependencies
+### Core Components
+- **Landing Page** (`src/app/landing/`): Main entry point with navigation
+- **Login Components**: Separate login for students, faculty, and admins
+- **Dashboard Components**: Role-specific dashboards with widgets
+- **Profile Components**: User profile management and photo upload
 
-Frontend:
-- Angular 20.x
-- TailwindCSS for styling
-- RxJS for reactive programming
-- Axios for HTTP requests
+### Services
+- **AuthService** (`src/app/services/auth.service.ts`): Admin authentication
+- **StudentAuthService**: Student authentication and session management
+- **FacultyAuthService**: Faculty authentication and permissions
+- **ApiService**: HTTP client for backend communication
 
-Backend:
-- Express.js 5.x
-- MariaDB/MySQL database driver
-- JWT for authentication
-- Bcrypt for password hashing
-- Nodemailer for email functionality
-- Multer for file uploads
-- Joi for validation
-- Helmet for security headers
+### Guards
+- **AdminGuard**: Protects admin routes
+- **StudentGuard**: Protects student routes  
+- **FacultyGuard**: Protects faculty routes
 
-### Development Scripts
+### Routing
+- **Public Routes**: Landing, login pages, about, contact
+- **Protected Routes**: Dashboards, profile pages
+- **Route Guards**: Authentication-based access control
 
-Frontend:
-- `npm start` - Start development server
-- `npm run start:separated` - Start frontend in separated deployment mode
-- `npm run build` - Build for production
-- `npm run build:separated` - Build for separated deployment
-- `npm test` - Run unit tests
+## 🛠️ Backend API (Node.js/Express)
 
-Backend:
-- `npm run backend:start` - Start backend server
-- `npm run backend:dev` - Start backend in development mode
-- `npm run backend:install` - Install backend dependencies
+### API Routes
+- **Authentication Routes** (`/api/v1/auth`): Student authentication
+- **Admin Auth Routes** (`/api/v1/adminauth`): Admin authentication
+- **Faculty Auth Routes** (`/api/v1/facultyauth`): Faculty authentication
+- **Weather Routes** (`/api/v1/weather`): Weather data integration
+- **Upload Routes** (`/api/v1/uploads`): File upload handling
 
-Full Development Environment:
-- `npm run dev:full` - Start both frontend and backend concurrently
-- `npm run dev:separated` - Start both in separated mode
+### Middleware
+- **JWT Authentication**: Token validation and user verification
+- **Security Middleware**: CORS, rate limiting, security headers
+- **Validation Middleware**: Input validation and sanitization
+- **Error Handling**: Comprehensive error management
 
-## Database Schema
+### Database Integration
+- **Connection Pool**: MySQL connection pooling for performance
+- **Query Execution**: Parameterized queries for security
+- **Transaction Support**: Database transaction management
+
+## 🗄️ Database Schema
 
 ### Core Tables
+1. **Students Table**
+   - StudentID (Primary Key, VARCHAR(10))
+   - FullName, Course, YearLevel, Section
+   - Email (Unique), PhoneNumber, Password
+   - ProfilePhoto (URL path)
+   - EnrollmentStatus, AccountStatus
+   - Timestamps (CreatedAt, UpdatedAt)
 
-#### Books
-- `BookID` (Primary Key)
-- `Title` - Book title
-- `Author` - Author name
-- `ISBN` - International Standard Book Number
-- `Category` - Book category
-- `Subject` - Subject area
-- `PublishedYear` - Publication year
-- `CopyrightYear` - Copyright year
-- `Publisher` - Publisher name
-- `CallNumber` - Library call number
-- `DeweyDecimal` - Dewey Decimal classification
-- `Copies` - Number of copies
-- `Remarks` - Additional notes
-- `Status` - Available/Borrowed/Lost/Damaged
-- `ShelfLocation` - Physical location in library
-- `AcquisitionDate` - Date acquired
-- `CreatedAt` - Record creation timestamp
-- `UpdatedAt` - Record update timestamp
+2. **Faculty Table**
+   - FacultyID (Primary Key, Auto-increment)
+   - FullName, Email (Unique), PhoneNumber
+   - Password, Department, Position
+   - Status, Timestamps
 
-#### Students
-- `StudentID` (Primary Key) - Format: YYYY-NNNNN
-- `FirstName` - First name
-- `MiddleInitial` - Middle initial
-- `LastName` - Last name
-- `Suffix` - Name suffix (Jr., Sr., etc.)
-- `Course` - Academic course
-- `YearLevel` - Year level (1-4)
-- `Section` - Class section
-- `Email` - Email address
-- `PhoneNumber` - Contact number
-- `ProfilePhoto` - URL to profile photo
-- `Password` - Hashed password
-- `EnrollmentStatus` - Active/Inactive
-- `AccountStatus` - Allowed/Blocked
-- `CreatedAt` - Record creation timestamp
-- `UpdatedAt` - Record update timestamp
+3. **Admins Table**
+   - AdminID (Primary Key, Auto-increment)
+   - FullName, Email (Unique), Password
+   - Role (Super Admin, Data Center Admin, Librarian, Librarian Staff)
+   - Status, Timestamps
 
-#### Faculty
-- `FacultyID` (Primary Key) - Format: YYYY-NNNNN
-- `FirstName` - First name
-- `MiddleInitial` - Middle initial
-- `LastName` - Last name
-- `Suffix` - Name suffix (Jr., Sr., etc.)
-- `Department` - Academic department
-- `Position` - Position title
-- `Email` - Email address
-- `PhoneNumber` - Contact number
-- `ProfilePhoto` - URL to profile photo
-- `Password` - Hashed password
-- `Status` - Active/Inactive
-- `CreatedAt` - Record creation timestamp
-- `UpdatedAt` - Record update timestamp
+4. **Books Table**
+   - BookID (Primary Key, Auto-increment)
+   - Title, Author, ISBN, Category, Subject
+   - PublishedYear, Publisher, CallNumber
+   - Copies, Status, ShelfLocation
+   - Timestamps
 
-#### Admins
-- `AdminID` (Primary Key)
-- `FirstName` - First name
-- `MiddleInitial` - Middle initial
-- `LastName` - Last name
-- `Suffix` - Name suffix (Jr., Sr., etc.)
-- `FullName` - Computed full name
-- `Email` - Email address
-- `Password` - Hashed password
-- `Role` - Super Admin/Admin/Librarian/Librarian Staff
-- `Status` - Active/Inactive
-- `ProfilePhoto` - URL to profile photo
-- `CreatedAt` - Record creation timestamp
-- `UpdatedAt` - Record update timestamp
+5. **Transactions Table**
+   - TransactionID (Primary Key, Auto-increment)
+   - StudentID/FacultyID (Foreign Keys)
+   - BookID (Foreign Key)
+   - BorrowDate, DueDate, ReturnDate
+   - Status (Pending, Borrowed, Returned, Overdue)
 
-#### Transactions (Borrowing)
-- `TransactionID` (Primary Key)
-- `StudentID` - Reference to student (nullable)
-- `FacultyID` - Reference to faculty (nullable)
-- `BookID` - Reference to book
-- `BorrowDate` - Date borrowed
-- `DueDate` - Due date for return
-- `ReturnDate` - Actual return date
-- `Status` - Pending/Borrowed/Returned/Overdue
-- `RenewalCount` - Number of renewals
-- `CreatedAt` - Record creation timestamp
-- `UpdatedAt` - Record update timestamp
+### Supporting Tables
+- **BookCopies**: Individual book copy tracking
+- **Reservations**: Book reservation system
+- **Fines**: Fine management
+- **Notifications**: User notifications
+- **SystemLogs**: Activity logging
+- **AdminAuditLogs**: Admin action tracking
+- **UserTokens**: Token management
+- **Reports**: Report generation
 
-#### Reservations
-- `ReservationID` (Primary Key)
-- `BookID` - Reference to book
-- `StudentID` - Reference to student (nullable)
-- `FacultyID` - Reference to faculty (nullable)
-- `ReservedAt` - Reservation timestamp
-- `Status` - Pending/Approved/Declined/Expired
+## 🔐 Security Implementation
 
-#### Audit Logs
-- Admin Audit Logs - Track admin actions
-- Faculty Audit Logs - Track faculty actions
+### Authentication & Authorization
+- **JWT Tokens**: Secure token-based authentication
+- **Password Hashing**: bcrypt for password security
+- **Session Management**: Token validation and refresh
+- **Role-Based Access**: Different permissions per user type
 
-## API Endpoints
+### Security Middleware
+- **Rate Limiting**: API request rate limiting
+- **CORS Configuration**: Cross-origin resource sharing
+- **Security Headers**: Helmet.js security headers
+- **Input Validation**: Joi validation for all inputs
+- **SQL Injection Protection**: Parameterized queries
 
-### Authentication Routes
+### File Upload Security
+- **File Type Validation**: Multiple validation layers
+- **Size Limits**: 5MB maximum file size
+- **Secure Storage**: Files stored outside web root
+- **Image Optimization**: Sharp library for image processing
 
-#### Student Authentication (`/api/v1/auth`)
-- `POST /register-student` - Register a new student
-- `POST /login` - Student login
-- `POST /validate-session` - Validate student session
-- `POST /logout` - Student logout
-- `GET /get-student/:studentID` - Get student by ID
-- `GET /get-all-students` - Get all students
-- `PUT /update-student/:studentID` - Update student information
-- `DELETE /delete-student/:studentID` - Delete student
-- `POST /change-password` - Change student password
+## 🌐 API Endpoints
 
-#### Admin Authentication (`/api/v1/adminauth`)
-- `POST /register-admin` - Register a new admin
-- `POST /login-admin` - Admin login
-- `POST /validate-session` - Validate admin session
-- `POST /logout` - Admin logout
-- `GET /get-admin/:adminID` - Get admin by ID
-- `GET /get-all-admins` - Get all admins (with pagination)
-- `GET /get-admins-by-role/:role` - Get admins by role
-- `PUT /update-admin/:adminID` - Update admin information
-- `DELETE /delete-admin/:adminID` - Delete admin
-- `GET /admin-audit-logs` - Get admin audit logs
-- `GET /admin-audit-logs/:adminID` - Get audit logs for specific admin
-- `POST /change-admin-password/:adminID` - Change admin password
-- `GET /profile/:adminId` - Get admin profile
-- `PUT /profile/:adminId` - Update admin profile
-
-#### Faculty Authentication (`/api/v1/facultyauth`)
-- `POST /register-faculty` - Register a new faculty member
-- `POST /login-faculty` - Faculty login
-- `POST /validate-session` - Validate faculty session
-- `POST /logout` - Faculty logout
-- `GET /get-faculty/:facultyID` - Get faculty by ID
-- `GET /get-all-faculty` - Get all faculty members
-- `GET /get-faculty-by-department/:department` - Get faculty by department
-- `GET /get-faculty-by-position/:position` - Get faculty by position
-- `PUT /update-faculty/:facultyID` - Update faculty information
-- `DELETE /delete-faculty/:facultyID` - Delete faculty member
-- `GET /faculty-audit-logs` - Get faculty audit logs
-- `GET /faculty-audit-logs/:facultyID` - Get audit logs for specific faculty
-- `POST /change-faculty-password/:facultyID` - Change faculty password
-
-### Book Management (`/api/v1/books`)
-- `GET /test` - Test endpoint
-- `GET /get-all-books` - Get all books (with pagination)
-- `PUT /update-book/:bookId` - Update book information
-- `DELETE /delete-book/:bookId` - Delete book
-- `POST /add-book` - Add a new book
-
-### Borrowing System (`/api/v1/borrowing`)
-- `POST /create-reservation` - Create a new reservation
-- `GET /reservations` - Get all reservations
-- `POST /fulfill-reservation/:reservationId` - Fulfill a reservation
-- `POST /reject-reservation/:reservationId` - Reject a reservation
-- `POST /notify-reservation/:reservationId` - Send notification about reservation
-- `GET /borrowing-transactions` - Get all borrowing transactions
-- `POST /return-book/:transactionId` - Return a borrowed book
-- `POST /create-fine` - Create a fine for overdue books
-- `POST /renew-book/:transactionId` - Renew a borrowed book
-- `GET /check-overdue` - Check for overdue books
-- `PUT /mark-fine-paid/:fineId` - Mark a fine as paid
-- `GET /student-stats/:studentId` - Get student-specific library statistics
-- `GET /student-transactions/:studentId` - Get student's borrowing transactions
-- `GET /student-reservations/:studentId` - Get student's reservations
-- `GET /student-fines/:studentId` - Get student's fines
-
-### Weather (`/api/v1/weather`)
-- `GET /` - Get current weather for Cebu City
-- `GET /forecast` - Get 5-day weather forecast
-
-## Deployment
-The system includes deployment configurations for:
-- Cloudflare
-- Render
-- Nginx
-- Docker (separate files for frontend and backend)
-
-## Additional Documentation
-Multiple markdown files provide detailed guides for:
-- Deployment procedures
-- Environment setup
-- JWT implementation
-- Logging system
-- Heart reactions implementation
-
-## Quick Start
-
-### Option 1: Run Everything Together (Recommended for Development)
-```bash
-# Windows
-start-dev.bat
-
-# Or manually
-npm run dev:full
+### Authentication Endpoints
+```
+POST /api/v1/auth/login                    # Student login
+POST /api/v1/auth/validate-session        # Validate student session
+POST /api/v1/adminauth/login-admin         # Admin login
+POST /api/v1/adminauth/validate-session   # Validate admin session
+POST /api/v1/facultyauth/login-faculty     # Faculty login
 ```
 
-### Option 2: Run Separated (Simulates Production Deployment)
-```bash
-# Windows
-start-separated.bat
-
-# Or manually
-npm run dev:separated
+### Profile Management
+```
+GET  /api/v1/auth/profile/:studentId      # Get student profile
+PUT  /api/v1/auth/update-student/:id      # Update student profile
+POST /api/v1/uploads/profile-photo/:id    # Upload profile photo
+GET  /api/v1/uploads/profile-photos/:file # Serve profile photos
 ```
 
-### Option 3: Manual Setup
-```bash
-# Install all dependencies
-npm run setup
-
-# Terminal 1: Start Backend
-npm run backend:start
-
-# Terminal 2: Start Frontend
-npm start
+### System Endpoints
 ```
+GET  /api/v1/weather                      # Get weather data
+GET  /api/v1/weather/forecast             # Get weather forecast
+GET  /                                    # Health check endpoint
+```
+
+## 🎨 UI/UX Features
+
+### Design System
+- **Tailwind CSS**: Utility-first CSS framework
+- **Responsive Design**: Mobile-first approach
+- **Dark Mode Support**: Theme switching capability
+- **Professional Animations**: Smooth transitions and effects
+
+### User Experience
+- **Loading States**: Progress indicators and spinners
+- **Error Handling**: User-friendly error messages
+- **Toast Notifications**: Success/error feedback
+- **Modal Dialogs**: Interactive confirmation dialogs
+
+### Navigation
+- **Mobile Navigation**: Sliding sidebar menu
+- **Desktop Navigation**: Horizontal navigation with tooltips
+- **Breadcrumbs**: Clear navigation hierarchy
+- **Route Protection**: Authentication-based access
+
+## 📊 Logging & Monitoring
+
+### Weather Logger
+- **API Status Monitoring**: OpenWeatherMap API health checks
+- **Fallback Data**: Graceful degradation when API fails
+- **Activity Logging**: Weather update tracking
+
+### System Logging
+- **Authentication Events**: Login/logout tracking
+- **Admin Actions**: Administrative activity logging
+- **Error Logging**: Comprehensive error tracking
+- **Performance Monitoring**: Response time tracking
+
+## 🚀 Deployment & Configuration
+
+### Environment Configurations
+- **Development**: Local development settings
+- **Separated**: Frontend/backend separation
+- **Production**: Production-ready configurations
+
+### Docker Support
+- **Frontend Dockerfile**: Angular application containerization
+- **Backend Dockerfile**: Node.js API containerization
+- **Docker Compose**: Multi-container orchestration
+
+### Database Setup
+- **Migration Scripts**: Database schema creation
+- **Seed Data**: Initial data population
+- **Backup Procedures**: Data backup strategies
+
+## 📝 Documentation
+
+### Setup Guides
+- **DEPLOYMENT_GUIDE.md**: Complete deployment instructions
+- **UPLOAD_SETUP_GUIDE.md**: Profile photo upload setup
+- **JWT_IMPLEMENTATION.md**: Authentication system guide
+- **ENVIRONMENT_SETUP.md**: Environment configuration
+
+### API Documentation
+- **Endpoint Documentation**: Complete API reference
+- **Authentication Flow**: JWT implementation details
+- **Error Codes**: Comprehensive error handling guide
+
+## 🧪 Testing & Quality Assurance
+
+### Testing Strategy
+- **Unit Tests**: Component and service testing
+- **Integration Tests**: API endpoint testing
+- **E2E Tests**: End-to-end user flow testing
+- **Security Testing**: Authentication and authorization testing
+
+### Quality Tools
+- **TypeScript**: Type safety and code quality
+- **ESLint**: Code linting and style enforcement
+- **Prettier**: Code formatting consistency
+- **Karma/Jasmine**: Testing framework for Angular
+
+## 🔄 Development Workflow
+
+### Development Scripts
+```bash
+npm run dev:full          # Start both frontend and backend
+npm run dev:separated     # Start in separated mode
+npm run backend:start     # Start backend only
+npm start                 # Start frontend only
+npm run setup            # Install all dependencies
+```
+
+### Build Process
+- **Angular Build**: Production-optimized builds
+- **Asset Optimization**: Image and resource optimization
+- **Code Splitting**: Lazy loading for performance
+- **Bundle Analysis**: Build size optimization
+
+## 📱 Mobile Responsiveness
+
+### Mobile Navigation
+- **Sliding Sidebar**: Half-screen modal navigation
+- **Centered Logo**: Consistent branding across devices
+- **Touch-Friendly**: Optimized for mobile interactions
+- **No Hover Effects**: Mobile-appropriate interactions
+
+### Responsive Design Patterns
+- **Breakpoint System**: Mobile-first responsive design
+- **Flexible Layouts**: Adaptive grid systems
+- **Image Optimization**: Responsive image handling
+- **Performance**: Optimized for mobile networks
+
+## 🎯 Dashboard Features
+
+### Admin Dashboard
+- **Overview Component**: System statistics and charts
+- **Books Management**: Complete book catalog management
+- **Students Management**: Student account administration
+- **Reports Component**: Data analytics and reporting
+- **Real-time Stats**: Live system metrics
+
+### Student Dashboard
+- **Personal Library**: Borrowed books and history
+- **Book Search**: Advanced search functionality
+- **Reservations**: Book reservation system
+- **Fines Management**: Outstanding fines tracking
+- **Profile Management**: Personal information updates
+
+### Faculty Dashboard
+- **Extended Access**: Enhanced library privileges
+- **Course Materials**: Academic resource management
+- **Student Records**: Limited student information access
+- **Research Tools**: Academic research features
+
+## 🔧 Advanced Features
+
+### Weather Integration
+- **OpenWeatherMap API**: Real-time weather data
+- **Fallback System**: Graceful degradation
+- **Location-Based**: Cebu City weather information
+- **Caching**: Efficient data caching
+
+### Profile Photo System
+- **Professional Storage**: Industry-standard implementation
+- **Image Optimization**: Sharp library processing
+- **Security**: Secure file handling
+- **Database Integration**: URL storage in database
+
+### Chat Widget
+- **Interactive Support**: Real-time chat functionality
+- **Typing Indicators**: Enhanced user experience
+- **Message History**: Conversation persistence
+- **Responsive Design**: Mobile-optimized interface
+
+## 🛡️ Security Best Practices
+
+### Input Validation
+- **Client-Side Validation**: Real-time form validation
+- **Server-Side Validation**: Joi schema validation
+- **Sanitization**: Input sanitization and cleaning
+- **Type Safety**: TypeScript type checking
+
+### Database Security
+- **Parameterized Queries**: SQL injection prevention
+- **Connection Pooling**: Secure connection management
+- **Access Control**: Role-based database access
+- **Audit Logging**: Database activity tracking
+
+### File Security
+- **Upload Validation**: Multiple validation layers
+- **Secure Storage**: Protected file storage
+- **Access Control**: Authenticated file access
+- **Virus Scanning**: File security scanning
+
+## 📈 Performance Optimization
+
+### Frontend Performance
+- **Lazy Loading**: Component lazy loading
+- **Code Splitting**: Bundle optimization
+- **Caching**: Browser caching strategies
+- **Minification**: Asset optimization
+
+### Backend Performance
+- **Connection Pooling**: Database connection optimization
+- **Caching**: Response caching
+- **Compression**: Response compression
+- **Rate Limiting**: API protection
+
+### Database Performance
+- **Indexing**: Optimized database indexes
+- **Query Optimization**: Efficient query design
+- **Connection Management**: Pool optimization
+- **Monitoring**: Performance monitoring
+
+## 🔄 Data Flow Architecture
+
+### Authentication Flow
+1. User submits credentials
+2. Backend validates against database
+3. JWT token generated and returned
+4. Frontend stores token in localStorage
+5. Token included in subsequent requests
+6. Backend validates token on protected routes
+
+### Profile Photo Upload Flow
+1. User selects image file
+2. Client-side validation (type, size)
+3. File uploaded to backend endpoint
+4. Server-side validation and processing
+5. Image optimization with Sharp
+6. Database URL storage
+7. Response with image URL
+
+### Dashboard Data Flow
+1. Component initialization
+2. Service calls to backend APIs
+3. JWT token validation
+4. Database queries execution
+5. Data transformation and formatting
+6. Response to frontend
+7. UI updates with new data
+
+This comprehensive index provides a complete overview of the Library Management System architecture, features, and implementation details. The system is designed with modern web development best practices, security considerations, and scalability in mind.
