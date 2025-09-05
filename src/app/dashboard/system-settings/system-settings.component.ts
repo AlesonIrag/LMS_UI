@@ -154,3 +154,26 @@ export class SystemSettingsComponent implements OnInit {
     alert('All changes saved successfully!');
   }
 }
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both added:      SYSTEM_INDEX.md
+	both added:      src/app/about/about.html
+	both added:      src/app/app.component.ts
+	both added:      src/app/app.html
+	both added:      src/app/app.routes.ts
+	both added:      src/app/app.ts
+	both added:      src/app/contact/contact.html
+	both added:      src/app/dashboard/README.md
+	both added:      src/app/dashboard/dashboard.html
+	both added:      src/app/dashboard/dashboard.ts
+	both added:      src/app/dashboard/system-settings/system-settings.component.html
+	both added:      src/app/dashboard/system-settings/system-settings.component.ts
+	both added:      src/app/landing/landing.component.ts
+	both added:      src/app/landing/landing.html
+	both added:      src/app/privacy-policy/privacy-policy.html
+	both added:      src/app/services/api.service.ts
+	both added:      src/app/services/student-auth.service.ts
+	both added:      src/app/student-dashboard/student-dashboard.component.html
+	both added:      src/app/student-dashboard/student-dashboard.component.ts
+	both added:      src/app/support/support.html
+	both added:      src/app/terms-of-service/terms-of-service.html
