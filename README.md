@@ -243,3 +243,5 @@ This project is licensed under the MIT License.
 **Vision**: Globally competitive institution in the Asia-Pacific region
 
 For more information, visit [benedictocollege.edu.ph](https://benedictocollege.edu.ph/)
+
+Co-authored-by: Nate <nathanielinocando@aol.com>"
