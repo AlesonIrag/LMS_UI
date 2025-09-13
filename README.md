@@ -244,4 +244,4 @@ This project is licensed under the MIT License.
 
 For more information, visit [benedictocollege.edu.ph](https://benedictocollege.edu.ph/)
 
-Co-authored-by: Nate <nathanielinocando@aol.com>"
+Co-authored-by: Nate <nathanielinocando@aol.com>
